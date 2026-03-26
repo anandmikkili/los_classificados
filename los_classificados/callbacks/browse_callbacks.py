@@ -2,17 +2,68 @@
 from dash import Input, Output, State, html, callback_context
 from dash.exceptions import PreventUpdate
 from los_classificados.server import app
-from los_classificados.utils.mock_data import MOCK_LISTINGS, CATEGORIES, NEIGHBORHOODS_BY_CITY
+from los_classificados.utils.mock_data import (
+    MOCK_LISTINGS, CATEGORIES, NEIGHBORHOODS_BY_CITY, NEARBY_CITIES, time_ago,
+)
+
+# Mirror of SUBCATEGORIES (single source in post_ad_callbacks; duplicated here
+# to avoid import cycles and keep callbacks self-contained).
+_SUBCATEGORIES = {
+    "real_estate": ["House for Sale", "Apartment for Sale", "Condo for Sale", "Townhouse",
+                    "Land/Lot", "Multi-Family", "Commercial Property", "Industrial", "Other"],
+    "rentals":     ["Apartment Rental", "House Rental", "Room for Rent", "Studio",
+                    "Commercial Rental", "Office Space", "Vacation Rental", "Short-Term / Airbnb", "Other"],
+    "services":    ["Electrician", "Plumber", "Cleaning", "Landscaping", "Moving", "Handyman",
+                    "Painting", "HVAC", "Pest Control", "Roofing", "Tutoring", "Childcare",
+                    "IT Support", "Photography", "Other"],
+    "vehicles":    ["Sedan", "SUV/Truck", "Pickup Truck", "Van/Minivan", "Motorcycle",
+                    "Boat", "RV/Camper", "Electric Vehicle", "Classic Car",
+                    "Commercial Vehicle", "Parts & Accessories", "Other"],
+    "electronics": ["Phones", "Laptops", "Tablets", "TVs", "Gaming Consoles",
+                    "Audio/Speakers", "Cameras", "Smart Home", "Accessories", "Other"],
+    "furniture":   ["Sofas & Sectionals", "Beds & Bedframes", "Mattresses", "Dining Sets",
+                    "Office Furniture", "Kids Furniture", "Outdoor/Patio", "Storage & Shelving", "Other"],
+    "jobs":        ["Technology", "Healthcare", "Construction & Trades",
+                    "Retail & Customer Service", "Finance & Accounting", "Education",
+                    "Transportation & Delivery", "Marketing & Design",
+                    "Remote / Work from Home", "Part-Time / Gig", "Other"],
+    "pets":        ["Dogs", "Cats", "Birds", "Fish & Aquarium", "Reptiles",
+                    "Small Animals", "Pet Accessories", "Pet Services", "Adoption", "Breeding", "Other"],
+    "community":   ["Events & Activities", "Garage Sales", "Lost & Found", "Volunteering",
+                    "Classes & Workshops", "Rideshare", "Free Stuff",
+                    "Musicians & Bands", "Sports & Fitness Groups", "Other"],
+    "beauty":      ["Hair Salon", "Nail Salon", "Spa & Massage", "Personal Training",
+                    "Yoga & Pilates", "Barber", "Makeup Artist", "Skincare",
+                    "Tattoo & Piercing", "Other"],
+    "food":        ["Catering", "Home-cooked Meals", "Baked Goods", "Food Trucks",
+                    "Private Chef", "Meal Prep", "Specialty Foods", "Drinks & Beverages", "Other"],
+    "other":       ["Collectibles", "Antiques", "Sports & Outdoors", "Baby & Kids",
+                    "Clothing & Accessories", "Books & Media", "Musical Instruments",
+                    "Art & Crafts", "Tickets & Vouchers", "Other"],
+}
 
 
 def _listing_row(lst):
     """Horizontal listing row card."""
-    has_wa = bool(lst.get("contact_whatsapp"))
-    has_ph = bool(lst.get("contact_phone"))
+    has_wa  = bool(lst.get("contact_whatsapp"))
+    has_ph  = bool(lst.get("contact_phone"))
+    is_feat = bool(lst.get("is_featured"))
+    freshness = time_ago(lst["created_at"])
+
+    border_style = {"overflow": "hidden", "border": "1.5px solid rgba(255,107,53,0.35)"} if is_feat else {"overflow": "hidden"}
+
     return html.Div(
         className="lc-card d-flex mb-3",
-        style={"overflow": "hidden"},
+        style=border_style,
         children=[
+            # featured side stripe
+            html.Div(
+                style={
+                    "width": "4px", "minWidth": "4px",
+                    "background": "linear-gradient(180deg, #ff6b35, #ff9a6c)",
+                    "flexShrink": "0",
+                },
+            ) if is_feat else None,
             html.Img(
                 src=lst["image"],
                 style={"width": "180px", "minWidth": "180px", "objectFit": "cover"},
@@ -21,14 +72,33 @@ def _listing_row(lst):
             html.Div(
                 className="p-3 d-flex flex-column flex-grow-1",
                 children=[
+                    # top row: badges + city + freshness
                     html.Div(className="d-flex justify-content-between align-items-start mb-1", children=[
                         html.Div([
+                            html.Span(
+                                [html.I(className="fas fa-bolt me-1"), "Featured"],
+                                className="me-1",
+                                style={
+                                    "background": "rgba(255,107,53,0.15)", "color": "#ff6b35",
+                                    "border": "1px solid rgba(255,107,53,0.4)",
+                                    "borderRadius": "100px", "padding": "0.1rem 0.45rem",
+                                    "fontSize": "0.68rem", "fontWeight": "700",
+                                },
+                            ) if is_feat else None,
                             html.Span("★ Prime", className="badge-prime me-1") if lst["is_prime"] else None,
                             html.Span([html.I(className="fas fa-check-circle me-1"), "Verified"],
                                       className="badge-verified me-1") if lst["is_verified"] else None,
                             html.Span(lst["subcategory"], className="badge-cat"),
                         ]),
-                        html.Small(lst["city"], className="text-muted-lc"),
+                        html.Div(className="d-flex align-items-center gap-2", children=[
+                            html.Small(lst["city"], className="text-muted-lc"),
+                            html.Small(
+                                [html.I(className="fas fa-clock me-1"), freshness],
+                                className="text-muted-lc",
+                                style={"fontSize": "0.72rem"},
+                                title=str(lst["created_at"]),
+                            ),
+                        ]),
                     ]),
                     html.Div(lst["title"], className="listing-title mb-1"),
                     html.P(
@@ -64,24 +134,86 @@ def _listing_row(lst):
     )
 
 
-# ── Neighborhood filter – updated reactively when city changes ──────────────
+def _section_header(text, icon, color="#8b949e"):
+    """Thin divider row between featured and regular listing groups."""
+    return html.Div(
+        className="d-flex align-items-center gap-2 mb-2 mt-1",
+        children=[
+            html.I(className=f"fas {icon}", style={"color": color, "fontSize": "0.8rem"}),
+            html.Span(text, style={"fontSize": "0.75rem", "fontWeight": "700",
+                                   "color": color, "letterSpacing": "0.06em",
+                                   "textTransform": "uppercase"}),
+            html.Hr(style={"flexGrow": "1", "margin": "0", "borderColor": "var(--border-color)"}),
+        ],
+    )
+
+
+_BANNER_STYLE = {
+    "background": "linear-gradient(135deg, rgba(0,201,167,0.12) 0%, rgba(0,201,167,0.05) 100%)",
+    "borderBottom": "1px solid rgba(0,201,167,0.25)",
+    "padding": "0.6rem 0",
+}
+
+
+# ── Neighborhood + nearby-cities filters – updated reactively when city changes ─
 
 @app.callback(
     Output("neighborhood-filter-section", "style"),
     Output("filter-neighborhoods", "options"),
     Output("filter-neighborhoods", "value"),
+    Output("nearby-cities-section", "style"),
     Input("browse-city-select", "value"),
     prevent_initial_call=False,
 )
 def update_neighborhood_filter(city):
-    """Show and populate neighborhood checklist when a city is selected."""
+    """Show neighborhood and nearby-cities filters when a city is selected."""
     if not city:
-        return {"display": "none"}, [], []
+        return {"display": "none"}, [], [], {"display": "none"}
     hoods = NEIGHBORHOODS_BY_CITY.get(city, [])
-    if not hoods:
-        return {"display": "none"}, [], []
-    options = [{"label": h, "value": h} for h in hoods]
-    return {}, options, []
+    nearby = NEARBY_CITIES.get(city, [])
+    nh_style = {} if hoods else {"display": "none"}
+    nh_opts = [{"label": h, "value": h} for h in hoods]
+    nearby_style = {} if nearby else {"display": "none"}
+    return nh_style, nh_opts, [], nearby_style
+
+
+# ── City context banner – reflects active city and nearby expansion ────────────
+
+@app.callback(
+    Output("city-context-banner", "style"),
+    Output("city-context-text", "children"),
+    Input("browse-city-select", "value"),
+    Input("filter-nearby-cities", "value"),
+    prevent_initial_call=False,
+)
+def update_city_banner(city, nearby_opt):
+    """Update city context banner to reflect active city and nearby expansion."""
+    if not city:
+        return {**_BANNER_STYLE, "display": "none"}, ""
+    text = f"Showing listings in {city}"
+    if nearby_opt and "nearby" in nearby_opt:
+        nearby = NEARBY_CITIES.get(city, [])
+        if nearby:
+            text += f" + nearby cities ({', '.join(nearby)})"
+    return {**_BANNER_STYLE, "display": "block"}, text
+
+
+# ── Subcategory drill-down – shown when exactly 1 category is selected ───────
+
+@app.callback(
+    Output("subcategory-drill-down-section", "style"),
+    Output("filter-subcategories", "options"),
+    Output("filter-subcategories", "value"),
+    Input("filter-categories", "value"),
+    prevent_initial_call=False,
+)
+def update_subcategory_filter(selected_cats):
+    if selected_cats and len(selected_cats) == 1:
+        cat_id = selected_cats[0]
+        subs = _SUBCATEGORIES.get(cat_id, [])
+        opts = [{"label": s, "value": s} for s in subs]
+        return {}, opts, []
+    return {"display": "none"}, [], []
 
 
 # ── Main results callback ────────────────────────────────────────────────────
@@ -97,12 +229,14 @@ def update_neighborhood_filter(city):
     Input("browse-sort", "value"),
     Input("browse-city-select", "value"),       # promoted from State → Input for reactive city filtering
     Input("filter-neighborhoods", "value"),     # hyperlocal neighborhood filter
+    Input("filter-nearby-cities", "value"),     # nearby markets expansion
+    Input("filter-subcategories", "value"),     # subcategory drill-down
     State("browse-search-input", "value"),
     prevent_initial_call=False,
 )
 def update_browse_results(
     _n, categories, price_range, listing_types, contact_methods,
-    sort_by, city, neighborhoods, search_query,
+    sort_by, city, neighborhoods, nearby_cities_opt, subcategories, search_query,
 ):
     listings = list(MOCK_LISTINGS)
 
@@ -118,9 +252,16 @@ def update_browse_results(
     if categories:
         listings = [l for l in listings if l["category"] in categories]
 
-    # ── City filter ────────────────────────────────────────────────────
+    # ── Subcategory filter (drill-down) ───────────────────────
+    if subcategories:
+        listings = [l for l in listings if l.get("subcategory") in subcategories]
+
+    # ── City filter with optional nearby expansion ─────────────────────
     if city:
-        listings = [l for l in listings if l["city"] == city]
+        cities_to_search = {city}
+        if nearby_cities_opt and "nearby" in nearby_cities_opt:
+            cities_to_search.update(NEARBY_CITIES.get(city, []))
+        listings = [l for l in listings if l["city"] in cities_to_search]
 
     # ── Neighborhood filter (hyperlocal) ──────────────────────────────
     if neighborhoods:
@@ -161,7 +302,9 @@ def update_browse_results(
                 filtered.append(l)
         listings = filtered
 
-    # ── Sort ───────────────────────────────────────────────────────────
+    # ── Sort within each group ─────────────────────────────────────────
+    # Featured listings are always pinned above regular ones; within each
+    # group the chosen sort order applies independently.
     if sort_by == "price_asc":
         listings = sorted(listings, key=lambda l: l["price"] or 0)
     elif sort_by == "price_desc":
@@ -170,7 +313,10 @@ def update_browse_results(
         listings = sorted(listings, key=lambda l: l["views"], reverse=True)
     elif sort_by == "prime":
         listings = sorted(listings, key=lambda l: (not l["is_prime"], -l["views"]))
-    else:  # recent
+    elif sort_by == "featured":
+        # Featured-first explicit sort: featured by recency, then regular by recency
+        listings = sorted(listings, key=lambda l: (not l.get("is_featured"), l["created_at"]))
+    else:  # "recent" (default)
         listings = sorted(listings, key=lambda l: l["created_at"], reverse=True)
 
     # Build count label with location context
@@ -178,7 +324,14 @@ def update_browse_results(
     if neighborhoods:
         location_ctx = f" in {', '.join(neighborhoods)}"
     elif city:
-        location_ctx = f" in {city}"
+        if nearby_cities_opt and "nearby" in nearby_cities_opt:
+            nearby = NEARBY_CITIES.get(city, [])
+            if nearby:
+                location_ctx = f" in {city} + {len(nearby)} nearby {'city' if len(nearby) == 1 else 'cities'}"
+            else:
+                location_ctx = f" in {city}"
+        else:
+            location_ctx = f" in {city}"
     count_text = f"Showing {len(listings)} listing{'s' if len(listings) != 1 else ''}{location_ctx}"
 
     if not listings:
@@ -195,7 +348,20 @@ def update_browse_results(
             count_text,
         )
 
-    return [_listing_row(l) for l in listings], count_text
+    # ── Split into featured vs regular and add section headers ─────────
+    featured_rows = [l for l in listings if l.get("is_featured")]
+    regular_rows  = [l for l in listings if not l.get("is_featured")]
+
+    rows = []
+    if featured_rows:
+        rows.append(_section_header("Featured Placements", "fa-bolt", "#ff6b35"))
+        rows.extend(_listing_row(l) for l in featured_rows)
+    if regular_rows:
+        if featured_rows:
+            rows.append(_section_header("All Listings", "fa-list", "#8b949e"))
+        rows.extend(_listing_row(l) for l in regular_rows)
+
+    return rows, count_text
 
 
 # ── Clear filters ────────────────────────────────────────────────────────────
@@ -206,8 +372,10 @@ def update_browse_results(
     Output("filter-listing-type", "value"),
     Output("filter-contact", "value"),
     Output("filter-neighborhoods", "value"),
+    Output("filter-nearby-cities", "value"),
+    Output("filter-subcategories", "value"),
     Input("clear-filters-btn", "n_clicks"),
     prevent_initial_call=True,
 )
 def clear_filters(_n):
-    return [], [0, 1_000_000], [], [], []
+    return [], [0, 1_000_000], [], [], [], [], []

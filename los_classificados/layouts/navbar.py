@@ -35,7 +35,7 @@ def navbar_layout():
                 className="d-flex align-items-center gap-1 ms-auto",
                 children=[
                     dcc.Link("Browse",  href="/browse",  className="nav-link-lc"),
-                    dcc.Link("Services",href="/browse?category=services", className="nav-link-lc"),
+                    dcc.Link("Services", href="/providers", className="nav-link-lc"),
                     dcc.Link("Prime",   href="/prime",   className="nav-link-lc"),
                     dcc.Link(
                         [html.I(className="fas fa-chart-line me-1"), "My Leads"],
@@ -52,8 +52,15 @@ def navbar_layout():
                     dbc.DropdownMenu(
                         label=html.I(className="fas fa-user-circle fa-lg"),
                         children=[
-                            dbc.DropdownMenuItem("My Profile"),
-                            dbc.DropdownMenuItem("My Listings"),
+                            dbc.DropdownMenuItem(
+                                [html.I(className="fas fa-th-large me-2"), "Dashboard"],
+                                href="/dashboard",
+                            ),
+                            dbc.DropdownMenuItem("My Listings", href="/my-listings"),
+                            dbc.DropdownMenuItem(
+                                [html.I(className="fas fa-store me-2"), "Business Profile"],
+                                href="/business",
+                            ),
                             dbc.DropdownMenuItem(divider=True),
                             dbc.DropdownMenuItem("Sign Out", href="/"),
                         ],

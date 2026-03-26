@@ -33,5 +33,6 @@ class Config:
     PRIME_MONTHLY_PRICE = 49.99
     PRIME_ANNUAL_PRICE = 399.99
     MAX_FREE_IMAGES = 5
+    MAX_FEATURED_IMAGES = 10
     MAX_PRIME_IMAGES = 20
     LEAD_COST_CREDIT = 1  # credits per lead

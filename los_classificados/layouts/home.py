@@ -1,12 +1,23 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
-from los_classificados.utils.mock_data import CATEGORIES, MOCK_LISTINGS, STATS, CITIES, CITY_STATS
+from los_classificados.utils.mock_data import CATEGORIES, MOCK_LISTINGS, STATS, CITIES, CITY_STATS, time_ago, CATEGORY_LISTING_COUNTS, CATEGORY_DESCRIPTIONS
 
 
 # ── Helper: listing card ────────────────────────────────────────────────────
 
 def listing_card(listing):
     badges = []
+    if listing.get("is_featured"):
+        badges.append(html.Span(
+            [html.I(className="fas fa-bolt me-1"), "Featured"],
+            className="me-1",
+            style={
+                "background": "rgba(255,107,53,0.15)", "color": "#ff6b35",
+                "border": "1px solid rgba(255,107,53,0.4)",
+                "borderRadius": "100px", "padding": "0.1rem 0.5rem",
+                "fontSize": "0.68rem", "fontWeight": "700",
+            },
+        ))
     if listing["is_prime"]:
         badges.append(html.Span("★ Prime", className="badge-prime me-1"))
     if listing["is_verified"]:
@@ -14,10 +25,24 @@ def listing_card(listing):
 
     has_whatsapp = bool(listing.get("contact_whatsapp"))
     has_phone    = bool(listing.get("contact_phone"))
+    freshness    = time_ago(listing["created_at"])
 
     return html.Div(
         className="listing-card",
+        style={"position": "relative", "border": "1.5px solid rgba(255,107,53,0.3)"} if listing.get("is_featured") else {"position": "relative"},
         children=[
+            # featured ribbon
+            html.Div(
+                "FEATURED",
+                style={
+                    "position": "absolute", "top": "10px", "right": "0px",
+                    "background": "#ff6b35", "color": "#fff",
+                    "fontSize": "0.6rem", "fontWeight": "800",
+                    "padding": "0.2rem 0.6rem",
+                    "borderRadius": "4px 0 0 4px",
+                    "letterSpacing": "0.08em", "zIndex": "1",
+                },
+            ) if listing.get("is_featured") else None,
             # image
             html.Img(src=listing["image"], className="listing-card-img", alt=listing["title"]),
             # body
@@ -48,9 +73,10 @@ def listing_card(listing):
                         style={"fontSize": "0.75rem"},
                     ) if has_phone else html.Span(),
                     html.Span(
-                        [html.I(className="fas fa-eye me-1"), str(listing["views"])],
+                        freshness,
                         className="ms-auto text-muted-lc",
-                        style={"fontSize": "0.75rem"},
+                        style={"fontSize": "0.72rem"},
+                        title=str(listing["created_at"]),
                     ),
                 ],
             ),
@@ -58,23 +84,94 @@ def listing_card(listing):
     )
 
 
+# ── SUBCATEGORIES top-3 for home-page pills ─────────────────────────────────
+# Imported here to avoid a circular dependency (post_ad_callbacks also defines it)
+_TOP_SUBCATS = {
+    "real_estate": ["House for Sale", "Apartment", "Land/Lot"],
+    "rentals":     ["Apartment Rental", "House Rental", "Short-Term"],
+    "services":    ["Electrician", "Cleaning", "Handyman"],
+    "vehicles":    ["Sedan", "SUV/Truck", "Electric Vehicle"],
+    "electronics": ["Phones", "Laptops", "Gaming Consoles"],
+    "furniture":   ["Sofas", "Beds", "Dining Sets"],
+    "jobs":        ["Technology", "Healthcare", "Remote"],
+    "pets":        ["Dogs", "Cats", "Adoption"],
+    "community":   ["Events", "Classes", "Free Stuff"],
+    "beauty":      ["Hair Salon", "Spa & Massage", "Yoga"],
+    "food":        ["Catering", "Baked Goods", "Private Chef"],
+    "other":       ["Collectibles", "Clothing", "Sports"],
+}
+
+
 # ── Helper: category card ───────────────────────────────────────────────────
 
 def category_card(cat):
+    count  = CATEGORY_LISTING_COUNTS.get(cat["id"], 0)
+    desc   = CATEGORY_DESCRIPTIONS.get(cat["id"], "")
+    subcats = _TOP_SUBCATS.get(cat["id"], [])
+
     return dbc.Col(
-        html.Div(
-            className="category-card",
-            id={"type": "cat-card", "index": cat["id"]},
-            children=[
-                html.Div(
-                    html.I(className=f"fas {cat['icon']}"),
-                    className="category-icon",
-                    style={"background": f"{cat['color']}1a", "color": cat["color"]},
-                ),
-                html.Div(cat["label"], className="category-label"),
-            ],
+        dcc.Link(
+            html.Div(
+                className="lc-card p-3 h-100",
+                style={"cursor": "pointer", "transition": "transform 0.15s, border-color 0.15s",
+                       "borderLeft": f"3px solid {cat['color']}40"},
+                id={"type": "cat-card", "index": cat["id"]},
+                children=[
+                    # Icon + label row
+                    html.Div(
+                        className="d-flex align-items-center gap-2 mb-1",
+                        children=[
+                            html.Div(
+                                html.I(className=f"fas {cat['icon']}"),
+                                style={
+                                    "width": "36px", "height": "36px", "borderRadius": "8px",
+                                    "background": f"{cat['color']}1a", "color": cat["color"],
+                                    "display": "flex", "alignItems": "center",
+                                    "justifyContent": "center", "fontSize": "1rem",
+                                    "flexShrink": "0",
+                                },
+                            ),
+                            html.Div([
+                                html.Div(cat["label"],
+                                         style={"fontWeight": "700", "fontSize": "0.9rem",
+                                                "color": "var(--text-primary)"}),
+                                html.Div(f"{count:,} listings",
+                                         style={"fontSize": "0.7rem", "color": cat["color"],
+                                                "fontWeight": "600"}),
+                            ]),
+                        ],
+                    ),
+                    # Description
+                    html.Div(
+                        desc,
+                        style={"fontSize": "0.72rem", "color": "var(--text-muted)",
+                               "marginBottom": "0.5rem", "lineHeight": "1.4"},
+                    ),
+                    # Subcategory pills
+                    html.Div(
+                        className="d-flex flex-wrap gap-1",
+                        children=[
+                            html.Span(
+                                s,
+                                style={
+                                    "background": f"{cat['color']}12",
+                                    "color": cat["color"],
+                                    "border": f"1px solid {cat['color']}30",
+                                    "borderRadius": "100px",
+                                    "padding": "0.08rem 0.45rem",
+                                    "fontSize": "0.62rem",
+                                    "fontWeight": "600",
+                                },
+                            )
+                            for s in subcats
+                        ],
+                    ),
+                ],
+            ),
+            href=f"/browse?category={cat['id']}",
+            style={"textDecoration": "none", "color": "inherit"},
         ),
-        xs=6, sm=4, md=3, lg=3,
+        xs=6, sm=6, md=4, lg=3, className="mb-3",
     )
 
 
@@ -95,7 +192,8 @@ def step_card(number, title, description, icon):
 # ── Main home layout ────────────────────────────────────────────────────────
 
 def home_layout():
-    featured = MOCK_LISTINGS[:6]
+    # Featured-first, then newest; take top 6
+    featured = sorted(MOCK_LISTINGS, key=lambda l: (not l.get("is_featured"), l["created_at"]))[:6]
 
     return html.Div([
 
@@ -195,9 +293,18 @@ def home_layout():
 
         # ── Browse Categories ─────────────────────────────────────────────
         dbc.Container(className="section", children=[
-            html.Div([
-                html.H2("Browse by Category", className="section-title"),
-                html.P("Explore thousands of listings across every category.", className="section-subtitle"),
+            dbc.Row([
+                dbc.Col([
+                    html.H2("Browse by Category", className="section-title"),
+                    html.P("Explore thousands of listings across every category.",
+                           className="section-subtitle"),
+                ]),
+                dbc.Col(
+                    dcc.Link("View all listings →", href="/browse",
+                             className="btn btn-outline-teal float-end mt-3"),
+                    className="d-flex align-items-start justify-content-end",
+                    md=3,
+                ),
             ]),
             dbc.Row([category_card(c) for c in CATEGORIES], className="g-3"),
         ], fluid=False),

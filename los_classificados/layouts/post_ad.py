@@ -1,6 +1,6 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
-from los_classificados.utils.mock_data import CATEGORIES, CITIES
+from los_classificados.utils.mock_data import CATEGORIES, CITIES, PLAN_FEATURES
 
 
 def _section_title(icon, text):
@@ -163,11 +163,12 @@ def post_ad_layout():
                         dbc.Row([
                             dbc.Col([
                                 html.Label("Neighborhood / Area", className="form-label"),
-                                dcc.Input(
+                                dcc.Dropdown(
                                     id="post-ad-neighborhood",
-                                    placeholder="e.g. Coral Gables, Downtown",
-                                    type="text",
-                                    className="form-control mb-3",
+                                    options=[],
+                                    placeholder="Select a neighborhood (choose city first)",
+                                    className="mb-3 bg-input",
+                                    clearable=True,
                                 ),
                             ]),
                         ]),
@@ -243,21 +244,108 @@ def post_ad_layout():
                     # ── 5. Photos ─────────────────────────────────────────
                     html.Div(className="lc-card p-4 mb-3", children=[
                         _section_title("fa-images", "5. Photos"),
-                        dcc.Upload(
-                            id="post-ad-images",
-                            children=html.Div([
-                                html.I(className="fas fa-cloud-upload-alt fa-3x mb-3",
-                                       style={"color": "var(--accent-teal)", "opacity": "0.8"}),
-                                html.Div("Drag & drop photos here, or click to select",
-                                         style={"fontWeight": "600", "marginBottom": "0.3rem"}),
-                                html.Small("JPEG, PNG, WebP · Max 5MB each · Up to 10 photos",
-                                           className="text-muted-lc"),
-                            ], style={"textAlign": "center"}),
-                            className="upload-zone",
-                            multiple=True,
-                            accept="image/*",
+
+                        dbc.Row([
+                            # Upload zone
+                            dbc.Col([
+                                dcc.Upload(
+                                    id="post-ad-images",
+                                    children=html.Div([
+                                        html.I(className="fas fa-cloud-upload-alt fa-3x mb-3",
+                                               style={"color": "var(--accent-teal)", "opacity": "0.8"}),
+                                        html.Div("Drag & drop photos here, or click to select",
+                                                 style={"fontWeight": "600", "marginBottom": "0.3rem"}),
+                                        html.Small("JPEG · PNG · WebP  ·  Max 5 MB each",
+                                                   className="text-muted-lc"),
+                                    ], style={"textAlign": "center"}),
+                                    className="upload-zone",
+                                    multiple=True,
+                                    accept="image/jpeg,image/jpg,image/png,image/webp",
+                                ),
+                            ], md=8),
+
+                            # Photo tips sidebar
+                            dbc.Col([
+                                html.Div(
+                                    className="p-3 h-100",
+                                    style={
+                                        "background": "var(--bg-secondary)",
+                                        "borderRadius": "8px",
+                                        "border": "1px solid var(--border-color)",
+                                    },
+                                    children=[
+                                        html.Div(
+                                            [html.I(className="fas fa-lightbulb me-2 text-teal"), "Photo Tips"],
+                                            style={"fontWeight": "700", "fontSize": "0.875rem", "marginBottom": "0.6rem"},
+                                        ),
+                                        html.Ul([
+                                            html.Li("First photo becomes the cover image",
+                                                    style={"fontSize": "0.78rem", "marginBottom": "0.3rem",
+                                                           "color": "var(--text-secondary)"}),
+                                            html.Li("Use natural lighting & clean backgrounds",
+                                                    style={"fontSize": "0.78rem", "marginBottom": "0.3rem",
+                                                           "color": "var(--text-secondary)"}),
+                                            html.Li("Show all angles or key features",
+                                                    style={"fontSize": "0.78rem", "marginBottom": "0.3rem",
+                                                           "color": "var(--text-secondary)"}),
+                                            html.Li("800 px wide minimum recommended",
+                                                    style={"fontSize": "0.78rem", "marginBottom": "0.3rem",
+                                                           "color": "var(--text-secondary)"}),
+                                            html.Li("Only upload images you own or have rights to use",
+                                                    style={"fontSize": "0.78rem", "color": "#ff6b35",
+                                                           "fontWeight": "600"}),
+                                        ], style={"paddingLeft": "1rem", "marginBottom": "0"}),
+                                    ],
+                                ),
+                            ], md=4),
+                        ], className="mb-3 g-3"),
+
+                        # Per-file validation errors
+                        html.Div(id="image-upload-alert"),
+
+                        # Photo count / plan limit bar
+                        html.Div(id="image-upload-counter", className="mb-2"),
+
+                        # Rich preview grid
+                        html.Div(
+                            id="uploaded-images-preview",
+                            className="d-flex flex-wrap gap-3",
+                            style={"minHeight": "0"},
                         ),
-                        html.Div(id="uploaded-images-preview", className="d-flex flex-wrap gap-2 mt-3"),
+
+                        # Rights & ownership consent
+                        html.Hr(className="divider mt-3"),
+                        html.Div(
+                            className="d-flex align-items-start gap-2 mt-2",
+                            children=[
+                                dbc.Checklist(
+                                    id="image-rights-consent",
+                                    options=[{"label": "", "value": "confirmed"}],
+                                    value=[],
+                                    input_style={"accentColor": "var(--accent-teal)", "marginTop": "2px"},
+                                    style={"flexShrink": "0"},
+                                ),
+                                html.Div([
+                                    html.Span(
+                                        "I confirm I own or have full rights to use all uploaded images, "
+                                        "or they are licensed for commercial use / in the public domain.",
+                                        style={"fontSize": "0.82rem", "color": "var(--text-secondary)"},
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.I(className="fas fa-shield-alt me-1"),
+                                            "Uploading images you do not own may result in your listing "
+                                            "being removed and your account suspended.",
+                                        ],
+                                        style={"fontSize": "0.75rem", "color": "var(--text-muted)",
+                                               "marginTop": "0.25rem"},
+                                    ),
+                                ]),
+                            ],
+                        ),
+
+                        # Hidden store holding validated image data
+                        dcc.Store(id="image-store", data=[]),
                     ]),
 
                     # ── 6. Plan ───────────────────────────────────────────
@@ -268,11 +356,25 @@ def post_ad_layout():
                             options=[
                                 {
                                     "label": html.Div([
-                                        html.Span("Free",    style={"fontWeight": "700", "fontSize": "1rem"}),
-                                        html.Span(" – Basic listing, visible to all users. Up to 5 photos.",
+                                        html.Span("Free", style={"fontWeight": "700", "fontSize": "1rem"}),
+                                        html.Span(" – Basic listing, newest-first in search. Up to 5 photos.",
                                                   style={"color": "var(--text-secondary)", "fontSize": "0.875rem"}),
                                     ]),
                                     "value": "free",
+                                },
+                                {
+                                    "label": html.Div([
+                                        html.Span("⚡ Featured Placement  ", style={"fontWeight": "700", "fontSize": "1rem",
+                                                                                    "color": "#ff6b35"}),
+                                        html.Span("from $4.99",
+                                                  style={"background": "rgba(255,107,53,0.15)", "color": "#ff6b35",
+                                                         "border": "1px solid rgba(255,107,53,0.4)",
+                                                         "fontWeight": "700", "padding": "0.1rem 0.5rem",
+                                                         "borderRadius": "100px", "fontSize": "0.75rem"}),
+                                        html.Div("Pinned above all regular listings · ⚡ Featured badge · Time-limited",
+                                                 style={"color": "var(--text-secondary)", "fontSize": "0.82rem", "marginTop": "0.2rem"}),
+                                    ]),
+                                    "value": "featured",
                                 },
                                 {
                                     "label": html.Div([
@@ -282,7 +384,7 @@ def post_ad_layout():
                                                   style={"background": "var(--gradient-prime)", "color": "#0d1117",
                                                          "fontWeight": "700", "padding": "0.1rem 0.5rem",
                                                          "borderRadius": "100px", "fontSize": "0.75rem"}),
-                                        html.Div("Top placement · 3× more views · 20 photos · Featured badge",
+                                        html.Div("Featured + Prime · 3× more views · 20 photos · Geo-targeting",
                                                  style={"color": "var(--text-secondary)", "fontSize": "0.82rem", "marginTop": "0.2rem"}),
                                     ]),
                                     "value": "prime_boost",
@@ -293,7 +395,134 @@ def post_ad_layout():
                             input_style={"accentColor": "var(--accent-teal)"},
                             label_style={"color": "var(--text-primary)", "marginBottom": "0.75rem"},
                         ),
+
+                        # ── Plan comparison mini-table ──────────────────
+                        html.Hr(className="divider mt-3"),
+                        html.Div(
+                            "Plan comparison",
+                            style={"fontSize": "0.75rem", "fontWeight": "700",
+                                   "color": "var(--text-muted)", "textTransform": "uppercase",
+                                   "letterSpacing": "0.06em", "marginBottom": "0.6rem"},
+                        ),
+                        html.Div(
+                            className="table-responsive",
+                            children=[
+                                html.Table(
+                                    className="w-100",
+                                    style={"fontSize": "0.78rem", "borderCollapse": "collapse"},
+                                    children=[
+                                        html.Thead(html.Tr([
+                                            html.Th("Feature", style={"padding": "0.35rem 0.6rem",
+                                                                        "color": "var(--text-muted)",
+                                                                        "borderBottom": "1px solid var(--border-color)",
+                                                                        "fontWeight": "600", "width": "32%"}),
+                                            html.Th("Free",    style={"padding": "0.35rem 0.6rem",
+                                                                        "color": "var(--text-secondary)",
+                                                                        "borderBottom": "1px solid var(--border-color)",
+                                                                        "fontWeight": "600", "textAlign": "center"}),
+                                            html.Th([html.I(className="fas fa-bolt me-1", style={"color": "#ff6b35"}), "Featured"],
+                                                    style={"padding": "0.35rem 0.6rem", "color": "#ff6b35",
+                                                           "borderBottom": "1px solid var(--border-color)",
+                                                           "fontWeight": "700", "textAlign": "center"}),
+                                            html.Th([html.I(className="fas fa-star me-1", style={"color": "#ffd700"}), "Prime"],
+                                                    style={"padding": "0.35rem 0.6rem", "color": "#ffd700",
+                                                           "borderBottom": "1px solid var(--border-color)",
+                                                           "fontWeight": "700", "textAlign": "center"}),
+                                        ])),
+                                        html.Tbody([
+                                            html.Tr([
+                                                html.Td(PLAN_FEATURES["free"][i][0],
+                                                        style={"padding": "0.3rem 0.6rem",
+                                                               "color": "var(--text-muted)",
+                                                               "borderBottom": "1px solid var(--border-color)"}),
+                                                html.Td(PLAN_FEATURES["free"][i][1],
+                                                        style={"padding": "0.3rem 0.6rem", "textAlign": "center",
+                                                               "color": "var(--text-secondary)",
+                                                               "borderBottom": "1px solid var(--border-color)"}),
+                                                html.Td(PLAN_FEATURES["featured"][i][1],
+                                                        style={"padding": "0.3rem 0.6rem", "textAlign": "center",
+                                                               "color": "var(--text-secondary)",
+                                                               "borderBottom": "1px solid var(--border-color)"}),
+                                                html.Td(PLAN_FEATURES["prime_boost"][i][1],
+                                                        style={"padding": "0.3rem 0.6rem", "textAlign": "center",
+                                                               "color": "var(--text-secondary)",
+                                                               "borderBottom": "1px solid var(--border-color)"}),
+                                            ])
+                                            for i in range(len(PLAN_FEATURES["free"]))
+                                        ]),
+                                    ],
+                                ),
+                            ],
+                        ),
                     ]),
+
+                    # ── 6b. Featured Duration (visible only for Featured / Prime plans) ─
+                    html.Div(
+                        id="featured-duration-section",
+                        style={"display": "none"},
+                        children=[
+                            html.Div(
+                                className="lc-card p-4 mb-4",
+                                style={"border": "1.5px solid rgba(255,107,53,0.3)"},
+                                children=[
+                                    _section_title("fa-clock", "6b. Featured Duration"),
+                                    html.P(
+                                        "How long should your listing stay pinned above regular results?",
+                                        style={"fontSize": "0.875rem", "color": "var(--text-secondary)", "marginBottom": "1rem"},
+                                    ),
+                                    dbc.RadioItems(
+                                        id="post-ad-featured-duration",
+                                        options=[
+                                            {
+                                                "label": html.Div([
+                                                    html.Span("7 days", style={"fontWeight": "700"}),
+                                                    html.Span("  –  $4.99", style={"color": "#ff6b35", "fontWeight": "600"}),
+                                                    html.Span("  Best for quick sales & one-off services",
+                                                              style={"color": "var(--text-muted)", "fontSize": "0.82rem"}),
+                                                ]),
+                                                "value": "7",
+                                            },
+                                            {
+                                                "label": html.Div([
+                                                    html.Span("14 days", style={"fontWeight": "700"}),
+                                                    html.Span("  –  $8.99", style={"color": "#ff6b35", "fontWeight": "600"}),
+                                                    html.Span("  Great for vehicles, real estate & rentals",
+                                                              style={"color": "var(--text-muted)", "fontSize": "0.82rem"}),
+                                                ]),
+                                                "value": "14",
+                                            },
+                                            {
+                                                "label": html.Div([
+                                                    html.Span("30 days", style={"fontWeight": "700"}),
+                                                    html.Span("  –  $14.99", style={"color": "#ff6b35", "fontWeight": "600"}),
+                                                    html.Span("  Ideal for ongoing services & job listings",
+                                                              style={"color": "var(--text-muted)", "fontSize": "0.82rem"}),
+                                                ]),
+                                                "value": "30",
+                                            },
+                                        ],
+                                        value="7",
+                                        className="mt-1",
+                                        input_style={"accentColor": "#ff6b35"},
+                                        label_style={"color": "var(--text-primary)", "marginBottom": "0.6rem"},
+                                    ),
+                                    dbc.Alert(
+                                        [
+                                            html.I(className="fas fa-info-circle me-2"),
+                                            "Your listing will appear in the ",
+                                            html.Strong("⚡ Featured Placements"),
+                                            " section at the top of every search until the period expires. "
+                                            "You can renew at any time.",
+                                        ],
+                                        color="warning",
+                                        style={"fontSize": "0.82rem", "padding": "0.6rem 1rem", "marginTop": "1rem",
+                                               "background": "rgba(255,107,53,0.08)", "border": "1px solid rgba(255,107,53,0.25)",
+                                               "color": "var(--text-secondary)"},
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
 
                     # ── 7. Prime Geo-Targeting (visible only for Prime Boost plan) ──
                     html.Div(

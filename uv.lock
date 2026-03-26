@@ -413,7 +413,7 @@ dev = [
 requires-dist = [
     { name = "boto3", specifier = ">=1.34.0" },
     { name = "cryptography", specifier = ">=42.0.0" },
-    { name = "dash", specifier = ">=3.0.0" },
+    { name = "dash", specifier = ">=4.1.0" },
     { name = "dash-bootstrap-components", specifier = ">=2.0.0" },
     { name = "dash-iconify", specifier = ">=0.1.2" },
     { name = "flask", specifier = ">=3.0.0" },

@@ -2,16 +2,68 @@
 from datetime import datetime, timedelta
 import random
 
+
+def time_ago(dt):
+    """Return a human-readable freshness label for a listing timestamp."""
+    delta = datetime.now() - dt
+    seconds = int(delta.total_seconds())
+    if seconds < 60:
+        return "Just now"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{minutes}m ago"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours}h ago"
+    days = hours // 24
+    if days == 1:
+        return "Yesterday"
+    return f"{days}d ago"
+
 CATEGORIES = [
-    {"id": "real_estate", "label": "Real Estate",   "icon": "fa-building",      "color": "#00c9a7"},
-    {"id": "rentals",     "label": "Rentals",        "icon": "fa-key",           "color": "#ff6b35"},
-    {"id": "services",    "label": "Services",       "icon": "fa-tools",         "color": "#3b82f6"},
-    {"id": "vehicles",    "label": "Vehicles",       "icon": "fa-car",           "color": "#a855f7"},
-    {"id": "electronics", "label": "Electronics",    "icon": "fa-laptop",        "color": "#f59e0b"},
-    {"id": "furniture",   "label": "Furniture",      "icon": "fa-couch",         "color": "#ec4899"},
-    {"id": "jobs",        "label": "Jobs",           "icon": "fa-briefcase",     "color": "#10b981"},
-    {"id": "other",       "label": "Other",          "icon": "fa-th-large",      "color": "#6b7280"},
+    {"id": "real_estate", "label": "Real Estate",       "icon": "fa-building",       "color": "#00c9a7"},
+    {"id": "rentals",     "label": "Rentals",           "icon": "fa-key",            "color": "#ff6b35"},
+    {"id": "services",    "label": "Services",          "icon": "fa-tools",          "color": "#3b82f6"},
+    {"id": "vehicles",    "label": "Vehicles",          "icon": "fa-car",            "color": "#a855f7"},
+    {"id": "electronics", "label": "Electronics",       "icon": "fa-laptop",         "color": "#f59e0b"},
+    {"id": "furniture",   "label": "Furniture",         "icon": "fa-couch",          "color": "#ec4899"},
+    {"id": "jobs",        "label": "Jobs",              "icon": "fa-briefcase",      "color": "#10b981"},
+    {"id": "pets",        "label": "Pets & Animals",    "icon": "fa-paw",            "color": "#f97316"},
+    {"id": "community",   "label": "Community",         "icon": "fa-calendar-alt",   "color": "#06b6d4"},
+    {"id": "beauty",      "label": "Beauty & Wellness", "icon": "fa-spa",            "color": "#d946ef"},
+    {"id": "food",        "label": "Food & Catering",   "icon": "fa-utensils",       "color": "#84cc16"},
+    {"id": "other",       "label": "Other",             "icon": "fa-th-large",       "color": "#6b7280"},
 ]
+
+CATEGORY_LISTING_COUNTS = {
+    "real_estate": 12_840,
+    "rentals":     9_320,
+    "services":    18_450,
+    "vehicles":    7_890,
+    "electronics": 11_230,
+    "furniture":   5_670,
+    "jobs":        6_340,
+    "pets":        3_120,
+    "community":   4_280,
+    "beauty":      2_940,
+    "food":        1_890,
+    "other":       8_120,
+}
+
+CATEGORY_DESCRIPTIONS = {
+    "real_estate": "Buy, sell and invest in properties",
+    "rentals":     "Apartments, houses, rooms & commercial",
+    "services":    "Hire trusted local professionals",
+    "vehicles":    "Cars, trucks, motorcycles & more",
+    "electronics": "Phones, laptops, gaming & tech",
+    "furniture":   "Home furnishings for every room",
+    "jobs":        "Full-time, part-time & remote roles",
+    "pets":        "Adopt, buy or find pet services",
+    "community":   "Events, classes & local activities",
+    "beauty":      "Salons, spas, fitness & wellness",
+    "food":        "Catering, home chefs & specialty foods",
+    "other":       "Collectibles, clothing, hobbies & more",
+}
 
 CITIES = ["Miami", "Los Angeles", "New York", "Houston", "Chicago", "Phoenix", "Dallas", "San Antonio"]
 
@@ -24,6 +76,17 @@ NEIGHBORHOODS_BY_CITY = {
     "Phoenix":     ["Scottsdale", "Tempe", "Mesa", "Chandler", "Glendale", "Downtown Phoenix", "Peoria"],
     "Dallas":      ["Frisco", "Plano", "Uptown", "Deep Ellum", "Oak Cliff", "Richardson", "Irving", "Arlington"],
     "San Antonio": ["Tech District", "Alamo Heights", "Stone Oak", "King William", "Pearl District", "Helotes"],
+}
+
+NEARBY_CITIES = {
+    "Miami":       [],
+    "Los Angeles": ["Phoenix"],
+    "New York":    [],
+    "Houston":     ["Dallas", "San Antonio"],
+    "Chicago":     [],
+    "Phoenix":     ["Los Angeles"],
+    "Dallas":      ["Houston", "San Antonio"],
+    "San Antonio": ["Houston", "Dallas"],
 }
 
 CITY_STATS = {
@@ -45,6 +108,10 @@ PLACEHOLDER_IMAGES = {
     "electronics": "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=400&q=80",
     "furniture":   "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80",
     "jobs":        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80",
+    "pets":        "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&q=80",
+    "community":   "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400&q=80",
+    "beauty":      "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80",
+    "food":        "https://images.unsplash.com/photo-1555244162-803834f70033?w=400&q=80",
     "other":       "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80",
 }
 
@@ -66,6 +133,8 @@ MOCK_LISTINGS = [
         "contact_whatsapp": "+13055550101",
         "views": 342,
         "created_at": datetime.now() - timedelta(days=2),
+        "is_featured": True,
+        "featured_until": datetime.now() + timedelta(days=5),
         "owner": {"name": "Realty Solutions Inc.", "rating": 4.8, "reviews": 127},
     },
     {
@@ -104,6 +173,8 @@ MOCK_LISTINGS = [
         "contact_whatsapp": "+17135550303",
         "views": 476,
         "created_at": datetime.now() - timedelta(hours=6),
+        "is_featured": True,
+        "featured_until": datetime.now() + timedelta(days=12),
         "owner": {"name": "PowerPro Electric", "rating": 4.9, "reviews": 203},
     },
     {
@@ -199,7 +270,136 @@ MOCK_LISTINGS = [
         "contact_whatsapp": None,
         "views": 724,
         "created_at": datetime.now() - timedelta(hours=3),
+        "is_featured": True,
+        "featured_until": datetime.now() + timedelta(days=27),
         "owner": {"name": "FinovaTech", "rating": 4.5, "reviews": 34},
+    },
+    # ── New-category listings ────────────────────────────────────────────────
+    {
+        "id": 9,
+        "title": "Golden Retriever Puppies – AKC Registered",
+        "description": "Beautiful, health-tested Golden Retriever puppies from champion lines. Parents OFA-certified hips and elbows. All pups come with first vet visit, vaccines, microchip, and 2-year health guarantee. Ready for their forever homes at 8 weeks.",
+        "category": "pets",
+        "subcategory": "Dogs",
+        "price": 1_800,
+        "price_label": "$1,800",
+        "city": "Dallas",
+        "neighborhood": "Frisco",
+        "image": PLACEHOLDER_IMAGES["pets"],
+        "is_prime": False,
+        "is_verified": True,
+        "contact_phone": "+12145550901",
+        "contact_whatsapp": "+12145550901",
+        "views": 218,
+        "created_at": datetime.now() - timedelta(days=3),
+        "is_featured": False,
+        "featured_until": None,
+        "owner": {"name": "Lone Star Goldens", "rating": 4.9, "reviews": 34},
+    },
+    {
+        "id": 10,
+        "title": "Latin Jazz Night – Live at The Pearl District",
+        "description": "Join us for an unforgettable evening of live Latin Jazz featuring local band Ritmo Caliente. Free entry before 8 PM. Full bar, tapas menu, dance floor. All ages welcome. Every last Friday of the month.",
+        "category": "community",
+        "subcategory": "Events & Activities",
+        "price": None,
+        "price_label": "Free Entry",
+        "city": "San Antonio",
+        "neighborhood": "Pearl District",
+        "image": PLACEHOLDER_IMAGES["community"],
+        "is_prime": False,
+        "is_verified": False,
+        "contact_phone": None,
+        "contact_whatsapp": "+12105551001",
+        "views": 87,
+        "created_at": datetime.now() - timedelta(hours=18),
+        "is_featured": False,
+        "featured_until": None,
+        "owner": {"name": "Pearl Events Co.", "rating": 4.5, "reviews": 12},
+    },
+    {
+        "id": 11,
+        "title": "Mobile Hair & Makeup Studio – Weddings & Events",
+        "description": "Professional bridal and event styling — on-location across Miami-Dade. 10 years experience, 200+ weddings. Packages include trials, day-of glam, and bridal party bookings. Book 3+ months out for peak dates.",
+        "category": "beauty",
+        "subcategory": "Makeup Artist",
+        "price": 350,
+        "price_label": "from $350",
+        "city": "Miami",
+        "neighborhood": "Coral Gables",
+        "image": PLACEHOLDER_IMAGES["beauty"],
+        "is_prime": True,
+        "is_verified": True,
+        "contact_phone": "+13055551101",
+        "contact_whatsapp": "+13055551101",
+        "views": 163,
+        "created_at": datetime.now() - timedelta(days=6),
+        "is_featured": True,
+        "featured_until": datetime.now() + timedelta(days=24),
+        "owner": {"name": "Glam by Sofia", "rating": 5.0, "reviews": 61},
+    },
+    {
+        "id": 12,
+        "title": "Custom Wedding Cakes & Dessert Tables – Houston",
+        "description": "Artisan wedding cakes, cupcake towers, and full dessert table setups. Gluten-free and vegan options available. Tastings by appointment. Delivering across Harris County. 6+ years serving Houston weddings.",
+        "category": "food",
+        "subcategory": "Baked Goods",
+        "price": 650,
+        "price_label": "from $650",
+        "city": "Houston",
+        "neighborhood": "Montrose",
+        "image": PLACEHOLDER_IMAGES["food"],
+        "is_prime": False,
+        "is_verified": True,
+        "contact_phone": "+17135551201",
+        "contact_whatsapp": "+17135551201",
+        "views": 95,
+        "created_at": datetime.now() - timedelta(days=4),
+        "is_featured": False,
+        "featured_until": None,
+        "owner": {"name": "Sweet Layers Bakery", "rating": 4.8, "reviews": 28},
+    },
+    {
+        "id": 13,
+        "title": "Persian Cat – Spayed Female, 2 Years Old",
+        "description": "Beautiful silver Persian cat, fully vaccinated, spayed, and microchipped. Very calm and affectionate. Good with other cats. Looking for a loving indoor-only home. Rehoming fee includes carrier and 1-month food supply.",
+        "category": "pets",
+        "subcategory": "Cats",
+        "price": 150,
+        "price_label": "$150 rehoming fee",
+        "city": "Los Angeles",
+        "neighborhood": "Silver Lake",
+        "image": PLACEHOLDER_IMAGES["pets"],
+        "is_prime": False,
+        "is_verified": False,
+        "contact_phone": None,
+        "contact_whatsapp": "+13235551301",
+        "views": 74,
+        "created_at": datetime.now() - timedelta(hours=36),
+        "is_featured": False,
+        "featured_until": None,
+        "owner": {"name": "Maya R.", "rating": None, "reviews": 0},
+    },
+    {
+        "id": 14,
+        "title": "Weekend Yoga Retreat – Scottsdale, AZ",
+        "description": "Two-day immersive yoga and mindfulness retreat at a private desert ranch. All levels welcome. Includes accommodation, 3 vegan meals daily, sunrise sessions, and guided meditation. Limited to 20 participants.",
+        "category": "beauty",
+        "subcategory": "Yoga & Pilates",
+        "price": 420,
+        "price_label": "$420 / person",
+        "city": "Phoenix",
+        "neighborhood": "Scottsdale",
+        "image": PLACEHOLDER_IMAGES["beauty"],
+        "is_prime": False,
+        "is_verified": True,
+        "contact_phone": "+16025551401",
+        "contact_whatsapp": "+16025551401",
+        "views": 141,
+        "created_at": datetime.now() - timedelta(days=7),
+        "is_featured": False,
+        "featured_until": None,
+        "owner": {"name": "Desert Flow Yoga", "rating": 4.9, "reviews": 19},
     },
 ]
 
@@ -259,4 +459,782 @@ STATS = {
     "active_users":   91_204,
     "cities_covered": 320,
     "prime_businesses": 1_847,
+}
+
+# ── Plan definitions ──────────────────────────────────────────────────────────
+
+PLAN_PRICES = {
+    "free":       {"label": "Free",     "price": 0,     "unit": ""},
+    "featured":   {"label": "Featured", "price": 4.99,  "unit": "/ listing"},
+    "prime_boost":{"label": "Prime",    "price": 9.99,  "unit": "/ listing"},
+}
+
+PLAN_FEATURES = {
+    "free": [
+        ("Photos",          "Up to 5"),
+        ("Search position", "Newest-first"),
+        ("Listing badge",   "None"),
+        ("Duration",        "30 days"),
+        ("Geo-targeting",   "—"),
+        ("Analytics",       "Basic views"),
+    ],
+    "featured": [
+        ("Photos",          "Up to 10"),
+        ("Search position", "Pinned above all regular listings"),
+        ("Listing badge",   "⚡ Featured badge"),
+        ("Duration",        "7 / 14 / 30 days"),
+        ("Geo-targeting",   "—"),
+        ("Analytics",       "Views + clicks"),
+    ],
+    "prime_boost": [
+        ("Photos",          "Up to 20"),
+        ("Search position", "Top of results + Featured section"),
+        ("Listing badge",   "★ Prime  +  ⚡ Featured"),
+        ("Duration",        "7 / 14 / 30 days"),
+        ("Geo-targeting",   "City & neighborhood targeting"),
+        ("Analytics",       "Full dashboard — views, leads, CTR"),
+    ],
+}
+
+# ── Mock "My Listings" data (simulates the logged-in user's own ads) ──────────
+
+MOCK_USER_LISTINGS = [
+    {
+        "id": 101,
+        "title": "Spacious 3BR House for Sale – Austin Hills",
+        "category": "real_estate",
+        "subcategory": "House for Sale",
+        "city": "Austin",
+        "neighborhood": "South Congress",
+        "price": 485_000,
+        "price_label": "$485,000",
+        "plan": "prime_boost",
+        "status": "active",
+        "views": 312,
+        "leads": 7,
+        "image": "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=300&h=200&fit=crop",
+        "created_at": datetime.now() - timedelta(days=14),
+        "expires_at": datetime.now() + timedelta(days=16),
+        "is_featured": True,
+        "is_prime": True,
+    },
+    {
+        "id": 102,
+        "title": "iPhone 15 Pro Max – 256 GB Unlocked",
+        "category": "electronics",
+        "subcategory": "Phones",
+        "city": "Dallas",
+        "neighborhood": "Uptown",
+        "price": 950,
+        "price_label": "$950",
+        "plan": "featured",
+        "status": "active",
+        "views": 88,
+        "leads": 3,
+        "image": "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=300&h=200&fit=crop",
+        "created_at": datetime.now() - timedelta(days=5),
+        "expires_at": datetime.now() + timedelta(days=9),
+        "is_featured": True,
+        "is_prime": False,
+    },
+    {
+        "id": 103,
+        "title": "Freelance Web Design & Branding Services",
+        "category": "services",
+        "subcategory": "Other",
+        "city": "Miami",
+        "neighborhood": "Brickell",
+        "price": None,
+        "price_label": "Get a Quote",
+        "plan": "free",
+        "status": "active",
+        "views": 44,
+        "leads": 1,
+        "image": "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=300&h=200&fit=crop",
+        "created_at": datetime.now() - timedelta(days=22),
+        "expires_at": datetime.now() + timedelta(days=8),
+        "is_featured": False,
+        "is_prime": False,
+    },
+    {
+        "id": 104,
+        "title": "2020 Honda Civic Sport – Low Miles",
+        "category": "vehicles",
+        "subcategory": "Sedan",
+        "city": "Houston",
+        "neighborhood": "Midtown",
+        "price": 21_500,
+        "price_label": "$21,500",
+        "plan": "free",
+        "status": "paused",
+        "views": 19,
+        "leads": 0,
+        "image": "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=300&h=200&fit=crop",
+        "created_at": datetime.now() - timedelta(days=10),
+        "expires_at": datetime.now() + timedelta(days=20),
+        "is_featured": False,
+        "is_prime": False,
+    },
+    {
+        "id": 105,
+        "title": "2BR Apartment Rental – Midtown Houston",
+        "category": "rentals",
+        "subcategory": "Apartment Rental",
+        "city": "Houston",
+        "neighborhood": "Midtown",
+        "price": 1_850,
+        "price_label": "$1,850/mo",
+        "plan": "free",
+        "status": "expired",
+        "views": 61,
+        "leads": 2,
+        "image": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=300&h=200&fit=crop",
+        "created_at": datetime.now() - timedelta(days=35),
+        "expires_at": datetime.now() - timedelta(days=5),
+        "is_featured": False,
+        "is_prime": False,
+    },
+]
+
+
+# ── Service provider directory ────────────────────────────────────────────────
+
+PROVIDER_SUBCATEGORIES = {
+    "services": [
+        "Electrician", "Plumber", "Cleaning", "Landscaping",
+        "Moving", "Handyman", "Tutoring", "HVAC", "Painting", "Other",
+    ],
+}
+
+# Price-range labels shown on provider cards
+PRICE_RANGE_LABEL = {
+    "$":   "Budget-friendly",
+    "$$":  "Mid-range",
+    "$$$": "Premium",
+}
+
+MOCK_PROVIDERS = [
+    {
+        "id": "p1",
+        "name": "Carlos Electric",
+        "owner_name": "Carlos Mendez",
+        "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&h=120&fit=crop&crop=face",
+        "cover": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&h=200&fit=crop",
+        "category": "services",
+        "subcategories": ["Electrician"],
+        "bio": (
+            "Licensed Master Electrician with 18 years of residential and commercial experience. "
+            "Specialising in panel upgrades, EV charger installation, LED retrofits, and smart-home wiring. "
+            "Same-day service available across Miami-Dade."
+        ),
+        "city": "Miami",
+        "neighborhoods_served": ["Coral Gables", "Brickell", "Wynwood", "Downtown", "Doral"],
+        "rating": 4.9,
+        "review_count": 87,
+        "is_verified": True,
+        "is_prime": True,
+        "years_experience": 18,
+        "price_range": "$$",
+        "response_time": "< 1 hour",
+        "jobs_completed": 340,
+        "portfolio": [
+            "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=300&h=200&fit=crop",
+        ],
+        "contact_phone": "+13055550201",
+        "contact_whatsapp": "+13055550201",
+        "contact_email": "carlos@carloselectric.com",
+        "created_at": datetime.now() - timedelta(days=320),
+        "reviews": [
+            {"author": "Maria G.", "rating": 5, "city": "Brickell",
+             "text": "Carlos upgraded our entire panel and installed two EV chargers. Neat work, on time, great price.",
+             "date": datetime.now() - timedelta(days=8)},
+            {"author": "James T.", "rating": 5, "city": "Coral Gables",
+             "text": "Diagnosed and fixed a tricky circuit issue in under an hour. Highly recommend.",
+             "date": datetime.now() - timedelta(days=21)},
+            {"author": "Sophie R.", "rating": 4, "city": "Downtown",
+             "text": "Good work on the LED retrofit. Slightly delayed but communicated well throughout.",
+             "date": datetime.now() - timedelta(days=45)},
+        ],
+    },
+    {
+        "id": "p2",
+        "name": "ProClean Miami",
+        "owner_name": "Ana Torres",
+        "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=120&h=120&fit=crop&crop=face",
+        "cover": "https://images.unsplash.com/photo-1527515637462-cff94edd56f9?w=600&h=200&fit=crop",
+        "category": "services",
+        "subcategories": ["Cleaning"],
+        "bio": (
+            "Professional residential and commercial cleaning since 2015. "
+            "Eco-friendly products, background-checked staff, satisfaction guaranteed. "
+            "Specialising in deep cleans, move-in/out, and weekly maintenance."
+        ),
+        "city": "Miami",
+        "neighborhoods_served": ["Brickell", "Wynwood", "Miami Beach", "Coconut Grove", "Coral Gables"],
+        "rating": 4.7,
+        "review_count": 143,
+        "is_verified": True,
+        "is_prime": False,
+        "years_experience": 9,
+        "price_range": "$",
+        "response_time": "< 2 hours",
+        "jobs_completed": 520,
+        "portfolio": [
+            "https://images.unsplash.com/photo-1527515637462-cff94edd56f9?w=300&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=300&h=200&fit=crop",
+        ],
+        "contact_phone": "+13055550202",
+        "contact_whatsapp": "+13055550202",
+        "contact_email": "ana@proclean.com",
+        "created_at": datetime.now() - timedelta(days=280),
+        "reviews": [
+            {"author": "David M.", "rating": 5, "city": "Miami Beach",
+             "text": "Best cleaning service I've used. The team was thorough and left the apartment spotless.",
+             "date": datetime.now() - timedelta(days=3)},
+            {"author": "Claire B.", "rating": 5, "city": "Brickell",
+             "text": "Very professional and eco-friendly products — I have allergies and they accommodated perfectly.",
+             "date": datetime.now() - timedelta(days=14)},
+            {"author": "Raj K.", "rating": 4, "city": "Wynwood",
+             "text": "Great move-out clean. A few corners missed but they came back and fixed it same day.",
+             "date": datetime.now() - timedelta(days=30)},
+        ],
+    },
+    {
+        "id": "p3",
+        "name": "Houston Plumbing Pros",
+        "owner_name": "Mike Rivera",
+        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face",
+        "cover": "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&h=200&fit=crop",
+        "category": "services",
+        "subcategories": ["Plumber"],
+        "bio": (
+            "Licensed plumber serving the Greater Houston area for 12 years. "
+            "Emergency repairs, water heater installation, remodels, leak detection. "
+            "Available 24/7 for urgent calls."
+        ),
+        "city": "Houston",
+        "neighborhoods_served": ["Midtown", "Montrose", "The Heights", "Medical Center", "Galleria"],
+        "rating": 4.8,
+        "review_count": 61,
+        "is_verified": True,
+        "is_prime": True,
+        "years_experience": 12,
+        "price_range": "$$",
+        "response_time": "< 30 min",
+        "jobs_completed": 480,
+        "portfolio": [
+            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=300&h=200&fit=crop",
+        ],
+        "contact_phone": "+17135550301",
+        "contact_whatsapp": "+17135550301",
+        "contact_email": "mike@houstonplumbing.com",
+        "created_at": datetime.now() - timedelta(days=410),
+        "reviews": [
+            {"author": "Sandra L.", "rating": 5, "city": "Montrose",
+             "text": "Came within 20 minutes for an emergency leak. Fixed it fast and the price was fair.",
+             "date": datetime.now() - timedelta(days=5)},
+            {"author": "Tom W.", "rating": 5, "city": "The Heights",
+             "text": "Water heater replacement done in under 3 hours. Clean, professional, and no mess left.",
+             "date": datetime.now() - timedelta(days=18)},
+        ],
+    },
+    {
+        "id": "p4",
+        "name": "GreenThumb Landscaping",
+        "owner_name": "Luis Garza",
+        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face",
+        "cover": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=200&fit=crop",
+        "category": "services",
+        "subcategories": ["Landscaping"],
+        "bio": (
+            "Award-winning landscape design and maintenance for residential and commercial properties. "
+            "Lawn care, irrigation systems, tree trimming, and seasonal planting. "
+            "Serving Dallas-Fort Worth since 2011."
+        ),
+        "city": "Dallas",
+        "neighborhoods_served": ["Frisco", "Plano", "Uptown", "Richardson", "Irving"],
+        "rating": 4.6,
+        "review_count": 98,
+        "is_verified": True,
+        "is_prime": False,
+        "years_experience": 13,
+        "price_range": "$$",
+        "response_time": "< 4 hours",
+        "jobs_completed": 260,
+        "portfolio": [
+            "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1558904541-efa843a96f01?w=300&h=200&fit=crop",
+        ],
+        "contact_phone": "+12145550401",
+        "contact_whatsapp": "+12145550401",
+        "contact_email": "luis@greenthumb.com",
+        "created_at": datetime.now() - timedelta(days=195),
+        "reviews": [
+            {"author": "Paula H.", "rating": 5, "city": "Plano",
+             "text": "Transformed our boring backyard into a beautiful garden. Luis has an eye for design.",
+             "date": datetime.now() - timedelta(days=10)},
+            {"author": "Chris M.", "rating": 4, "city": "Frisco",
+             "text": "Regular lawn maintenance — reliable and always tidy. Wish they offered snow removal too!",
+             "date": datetime.now() - timedelta(days=28)},
+            {"author": "Anita S.", "rating": 5, "city": "Uptown",
+             "text": "Irrigation system install was seamless. Great value and very knowledgeable crew.",
+             "date": datetime.now() - timedelta(days=55)},
+        ],
+    },
+    {
+        "id": "p5",
+        "name": "Swift Movers Chicago",
+        "owner_name": "Derrick Johnson",
+        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face",
+        "cover": "https://images.unsplash.com/photo-1580674285054-bed31e145f59?w=600&h=200&fit=crop",
+        "category": "services",
+        "subcategories": ["Moving"],
+        "bio": (
+            "Fully insured moving company serving Chicago and suburbs since 2016. "
+            "Local and long-distance moves, packing services, and furniture assembly. "
+            "Flat-rate quotes — no hidden fees."
+        ),
+        "city": "Chicago",
+        "neighborhoods_served": ["Lincoln Park", "Wicker Park", "River North", "Logan Square", "The Loop"],
+        "rating": 4.5,
+        "review_count": 72,
+        "is_verified": True,
+        "is_prime": False,
+        "years_experience": 8,
+        "price_range": "$$",
+        "response_time": "< 3 hours",
+        "jobs_completed": 310,
+        "portfolio": [
+            "https://images.unsplash.com/photo-1580674285054-bed31e145f59?w=300&h=200&fit=crop",
+        ],
+        "contact_phone": "+13125550501",
+        "contact_whatsapp": None,
+        "contact_email": "derrick@swiftmovers.com",
+        "created_at": datetime.now() - timedelta(days=155),
+        "reviews": [
+            {"author": "Kevin A.", "rating": 5, "city": "Lincoln Park",
+             "text": "Moved a 2BR apartment in 4 hours, no damage, fair price. Will use again.",
+             "date": datetime.now() - timedelta(days=7)},
+            {"author": "Megan C.", "rating": 4, "city": "Wicker Park",
+             "text": "Professional team. A bit slow on the wrap-up but everything arrived intact.",
+             "date": datetime.now() - timedelta(days=22)},
+        ],
+    },
+    {
+        "id": "p6",
+        "name": "Handyman LA",
+        "owner_name": "Robert Kim",
+        "avatar": "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=120&h=120&fit=crop&crop=face",
+        "cover": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=200&fit=crop",
+        "category": "services",
+        "subcategories": ["Handyman", "Painting"],
+        "bio": (
+            "Versatile handyman serving the Greater Los Angeles area. "
+            "Interior/exterior painting, drywall, tile, door and window repairs, furniture assembly, and more. "
+            "Over 400 five-star reviews across platforms."
+        ),
+        "city": "Los Angeles",
+        "neighborhoods_served": ["DTLA", "Hollywood", "Silver Lake", "Koreatown", "West Hollywood"],
+        "rating": 4.8,
+        "review_count": 204,
+        "is_verified": True,
+        "is_prime": True,
+        "years_experience": 11,
+        "price_range": "$",
+        "response_time": "< 2 hours",
+        "jobs_completed": 420,
+        "portfolio": [
+            "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=300&h=200&fit=crop",
+            "https://images.unsplash.com/photo-1562259929-b4e1fd3aef09?w=300&h=200&fit=crop",
+        ],
+        "contact_phone": "+13235550601",
+        "contact_whatsapp": "+13235550601",
+        "contact_email": "robert@handymanla.com",
+        "created_at": datetime.now() - timedelta(days=240),
+        "reviews": [
+            {"author": "Lisa N.", "rating": 5, "city": "Silver Lake",
+             "text": "Robert painted our whole house in two days. Immaculate prep, clean lines, perfect finish.",
+             "date": datetime.now() - timedelta(days=4)},
+            {"author": "Sam P.", "rating": 5, "city": "DTLA",
+             "text": "Fixed 6 different things in one visit — doors, tiles, leaky faucet. Super efficient.",
+             "date": datetime.now() - timedelta(days=16)},
+            {"author": "Nina W.", "rating": 5, "city": "Hollywood",
+             "text": "Assembled an entire IKEA bedroom set in 3 hours. Worth every penny.",
+             "date": datetime.now() - timedelta(days=33)},
+        ],
+    },
+]
+
+# ── Business profile (simulates the logged-in owner's business account) ─────
+
+BUSINESS_HOURS_TEMPLATE = {
+    "Monday":    {"open": True,  "from": "08:00", "to": "18:00"},
+    "Tuesday":   {"open": True,  "from": "08:00", "to": "18:00"},
+    "Wednesday": {"open": True,  "from": "08:00", "to": "18:00"},
+    "Thursday":  {"open": True,  "from": "08:00", "to": "18:00"},
+    "Friday":    {"open": True,  "from": "08:00", "to": "17:00"},
+    "Saturday":  {"open": True,  "from": "09:00", "to": "14:00"},
+    "Sunday":    {"open": False, "from": "",       "to": ""},
+}
+
+MOCK_BUSINESS_PROFILE = {
+    "id": "b1",
+    "business_name": "Carlos Electric",
+    "owner_name": "Carlos Mendez",
+    "tagline": "Licensed Master Electrician – Same-Day Service",
+    "description": (
+        "Licensed Master Electrician with 18 years of residential and commercial experience '"
+        "serving Miami-Dade. Specialising in panel upgrades, EV charger installation, LED retrofits, "
+        "smart-home wiring, and emergency repairs. Fully insured with a 1-year workmanship guarantee."
+    ),
+    "logo": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&h=120&fit=crop&crop=face",
+    "cover": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200&h=300&fit=crop",
+    "category": "services",
+    "subcategories": ["Electrician"],
+    "city": "Miami",
+    "service_areas": ["Coral Gables", "Brickell", "Wynwood", "Downtown", "Doral", "Hialeah"],
+    "phone": "+13055550201",
+    "whatsapp": "+13055550201",
+    "email": "carlos@carloselectric.com",
+    "website": "https://carloselectric.com",
+    "social": {
+        "facebook": "https://facebook.com/carloselectric",
+        "instagram": "https://instagram.com/carloselectric",
+        "linkedin": "",
+        "twitter": "",
+    },
+    "hours": BUSINESS_HOURS_TEMPLATE,
+    "portfolio": [
+        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&h=200&fit=crop",
+        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop",
+        "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=300&h=200&fit=crop",
+        "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=300&h=200&fit=crop",
+    ],
+    "is_verified": True,
+    "is_prime": True,
+    "plan": "prime_boost",
+    "plan_expires": datetime.now() + timedelta(days=16),
+    "rating": 4.9,
+    "review_count": 87,
+    "jobs_completed": 340,
+    "years_experience": 18,
+    "response_time": "< 1 hour",
+    "price_range": "$$",
+    "member_since": datetime(2022, 3, 15),
+    "reviews": [
+        {"author": "Maria G.", "rating": 5, "city": "Brickell",
+         "text": "Carlos upgraded our entire panel and installed two EV chargers. Neat work, on time, great price.",
+         "date": datetime.now() - timedelta(days=8)},
+        {"author": "James T.", "rating": 5, "city": "Coral Gables",
+         "text": "Diagnosed and fixed a tricky circuit issue in under an hour. Highly recommend.",
+         "date": datetime.now() - timedelta(days=21)},
+        {"author": "Sophie R.", "rating": 4, "city": "Downtown",
+         "text": "Good work on the LED retrofit. Slightly delayed but communicated well.",
+         "date": datetime.now() - timedelta(days=45)},
+        {"author": "Rafael M.", "rating": 5, "city": "Doral",
+         "text": "Smart-home wiring for full Lutron setup. Professional and very clean work.",
+         "date": datetime.now() - timedelta(days=60)},
+    ],
+}
+
+# ── Business analytics (30-day mock data) ────────────────────────────────────
+
+import random as _rnd
+_rnd.seed(42)
+
+BUSINESS_ANALYTICS = {
+    "daily_views":  [_rnd.randint(18, 55) for _ in range(30)],
+    "daily_leads":  [_rnd.randint(0, 8)   for _ in range(30)],
+    "lead_sources": {"WhatsApp": 47, "Phone Call": 31, "Email": 22},
+    "top_listings": [
+        {"title": "Spacious 3BR House – Austin Hills",  "views": 312, "leads": 7},
+        {"title": "Licensed Electrician – Residential",  "views": 284, "leads": 5},
+        {"title": "iPhone 15 Pro Max – 256 GB",          "views": 88,  "leads": 3},
+        {"title": "Freelance Web Design & Branding",     "views": 44,  "leads": 1},
+        {"title": "2BR Apartment – Midtown Houston",     "views": 61,  "leads": 2},
+    ],
+    "weekly_ctr":   [4.2, 5.1, 4.8, 6.3, 5.7, 6.9, 7.2, 6.8],  # click-through rate %
+}
+
+# ── Lead Generation & Performance Tools mock data ─────────────────────────────
+
+LEAD_QUALITY_LABELS = {
+    "hot":  {"label": "Hot",  "color": "#ef4444", "bg": "rgba(239,68,68,0.12)",  "icon": "fa-fire"},
+    "warm": {"label": "Warm", "color": "#f59e0b", "bg": "rgba(245,158,11,0.12)", "icon": "fa-sun"},
+    "cold": {"label": "Cold", "color": "#3b82f6", "bg": "rgba(59,130,246,0.12)", "icon": "fa-snowflake"},
+}
+
+MOCK_VERIFIED_LEADS = [
+    {
+        "id": 1, "listing_id": 3, "listing_title": "Licensed Electrician - Residential & Commercial",
+        "requester_name": "James Wilson",  "requester_phone": "+17135559001",
+        "requester_email": "jwilson@email.com", "city": "Houston",
+        "contact_method": "whatsapp", "status": "new",
+        "message": "Need panel upgrade for new workshop. 200A service. When can you come by?",
+        "created_at": datetime.now() - timedelta(hours=2),
+        "is_verified": True,   "quality_score": 92, "quality_tier": "hot",
+        "response_time_hrs": None, "lead_source": "prime",
+        "view_count": 4, "repeat_contact": False, "estimated_value": 850,
+    },
+    {
+        "id": 2, "listing_id": 6, "listing_title": "Professional Cleaning Services - Move In/Out",
+        "requester_name": "Maria Garcia", "requester_phone": "+13125559002",
+        "requester_email": "mgarcia@email.com", "city": "Chicago",
+        "contact_method": "call", "status": "contacted",
+        "message": "Moving out of a 3BR apartment end of month. Need deep clean ASAP.",
+        "created_at": datetime.now() - timedelta(hours=8),
+        "is_verified": True,   "quality_score": 78, "quality_tier": "hot",
+        "response_time_hrs": 1.5, "lead_source": "featured",
+        "view_count": 2, "repeat_contact": False, "estimated_value": 320,
+    },
+    {
+        "id": 3, "listing_id": 3, "listing_title": "Licensed Electrician - Residential & Commercial",
+        "requester_name": "Robert Chen", "requester_phone": "+17135559003",
+        "requester_email": "rchen@email.com", "city": "Houston",
+        "contact_method": "email", "status": "qualified",
+        "message": "EV charger installation for Tesla Model Y. Have a 200A panel already.",
+        "created_at": datetime.now() - timedelta(days=1),
+        "is_verified": False,  "quality_score": 61, "quality_tier": "warm",
+        "response_time_hrs": 3.2, "lead_source": "organic",
+        "view_count": 3, "repeat_contact": False, "estimated_value": 650,
+    },
+    {
+        "id": 4, "listing_id": 8, "listing_title": "Senior Software Engineer - Remote / Hybrid",
+        "requester_name": "Priya Sharma", "requester_phone": "+12105559004",
+        "requester_email": "psharma@email.com", "city": "Austin",
+        "contact_method": "email", "status": "closed_won",
+        "message": "8 years experience in fintech, React + FastAPI. Interested in the role.",
+        "created_at": datetime.now() - timedelta(days=2),
+        "is_verified": True,   "quality_score": 88, "quality_tier": "hot",
+        "response_time_hrs": 0.8, "lead_source": "ppc",
+        "view_count": 6, "repeat_contact": True, "estimated_value": 1200,
+    },
+    {
+        "id": 5, "listing_id": 6, "listing_title": "Professional Cleaning Services - Move In/Out",
+        "requester_name": "Tom Baker", "requester_phone": "+13125559005",
+        "requester_email": "tbaker@email.com", "city": "Chicago",
+        "contact_method": "whatsapp", "status": "new",
+        "message": "Weekly cleaning for a 2BR condo. Every Saturday morning preferred.",
+        "created_at": datetime.now() - timedelta(hours=1),
+        "is_verified": False,  "quality_score": 45, "quality_tier": "warm",
+        "response_time_hrs": None, "lead_source": "organic",
+        "view_count": 1, "repeat_contact": False, "estimated_value": 180,
+    },
+    {
+        "id": 6, "listing_id": 3, "listing_title": "Licensed Electrician - Residential & Commercial",
+        "requester_name": "Diana Ross", "requester_phone": "+17135559006",
+        "requester_email": "dross@email.com", "city": "Houston",
+        "contact_method": "call", "status": "contacted",
+        "message": "Smart home wiring for new construction. Full Lutron system.",
+        "created_at": datetime.now() - timedelta(days=3),
+        "is_verified": True,   "quality_score": 95, "quality_tier": "hot",
+        "response_time_hrs": 0.5, "lead_source": "prime",
+        "view_count": 7, "repeat_contact": True, "estimated_value": 3400,
+    },
+    {
+        "id": 7, "listing_id": 1, "listing_title": "Spacious 3BR House for Sale - Austin Hills",
+        "requester_name": "Kevin Park", "requester_phone": "+15125559007",
+        "requester_email": "kpark@email.com", "city": "Austin",
+        "contact_method": "email", "status": "new",
+        "message": "Interested in viewing this weekend. Is the price negotiable?",
+        "created_at": datetime.now() - timedelta(hours=5),
+        "is_verified": False,  "quality_score": 28, "quality_tier": "cold",
+        "response_time_hrs": None, "lead_source": "organic",
+        "view_count": 1, "repeat_contact": False, "estimated_value": None,
+    },
+    {
+        "id": 8, "listing_id": 6, "listing_title": "Professional Cleaning Services - Move In/Out",
+        "requester_name": "Sandra Lee", "requester_phone": "+13125559008",
+        "requester_email": "slee@email.com", "city": "Chicago",
+        "contact_method": "whatsapp", "status": "closed_lost",
+        "message": "Looking for bi-weekly cleaning. Budget $120/visit.",
+        "created_at": datetime.now() - timedelta(days=5),
+        "is_verified": False,  "quality_score": 35, "quality_tier": "cold",
+        "response_time_hrs": 18.0, "lead_source": "featured",
+        "view_count": 1, "repeat_contact": False, "estimated_value": 120,
+    },
+]
+
+RESPONSE_PACKAGES = [
+    {
+        "id": "starter", "name": "Starter Response", "price": 14.99, "guarantee_hours": 24,
+        "badge": "24h Response", "badge_color": "#3b82f6",
+        "features": [
+            "Respond to all leads within 24 hours",
+            "Lead notification via email & SMS",
+            "Auto-reply template when offline",
+            "Response rate badge on listing",
+        ],
+        "refund_policy": "10% credit if you miss an SLA by > 6 hours",
+        "is_current": False,
+    },
+    {
+        "id": "growth", "name": "Growth Response", "price": 29.99, "guarantee_hours": 4,
+        "badge": "4h Response", "badge_color": "#f59e0b",
+        "features": [
+            "Respond to all leads within 4 hours",
+            "Priority lead queue with quality scoring",
+            "AI-suggested reply templates",
+            "Response badge prominently on listing",
+            "Weekly compliance report",
+        ],
+        "refund_policy": "Full credit for any missed SLA",
+        "is_current": True,
+    },
+    {
+        "id": "pro", "name": "Pro Response", "price": 59.99, "guarantee_hours": 1,
+        "badge": "1h Response", "badge_color": "#00c9a7",
+        "features": [
+            "Respond to all verified leads within 1 hour",
+            "Real-time push notifications",
+            "Premium Instant Responder badge",
+            "Lead quality pre-screening",
+            "Dedicated account manager",
+            "100% credit guarantee for missed SLAs",
+        ],
+        "refund_policy": "100% credit for any missed SLA + escalation",
+        "is_current": False,
+    },
+]
+
+import random as _rnd2
+_rnd2.seed(7)
+SLA_COMPLIANCE = {
+    "on_time": 6, "late": 1, "missed": 1,
+    "avg_response_hrs": 3.6, "best_response_hrs": 0.5, "current_streak": 12,
+    "daily_response_times": [round(_rnd2.uniform(0.5, 5.5), 1) for _ in range(30)],
+    "sla_events": [
+        {"date": datetime.now() - timedelta(days=1),  "lead": "James Wilson",  "hrs": 0.8,  "status": "on_time"},
+        {"date": datetime.now() - timedelta(days=2),  "lead": "Maria Garcia",  "hrs": 1.5,  "status": "on_time"},
+        {"date": datetime.now() - timedelta(days=3),  "lead": "Diana Ross",    "hrs": 0.5,  "status": "on_time"},
+        {"date": datetime.now() - timedelta(days=5),  "lead": "Sandra Lee",    "hrs": 18.0, "status": "missed"},
+        {"date": datetime.now() - timedelta(days=7),  "lead": "Robert Chen",   "hrs": 3.2,  "status": "on_time"},
+        {"date": datetime.now() - timedelta(days=10), "lead": "Tom Baker",     "hrs": 5.1,  "status": "late"},
+    ],
+}
+
+MOCK_SEO_SCORES = [
+    {
+        "listing_id": 3,
+        "listing_title": "Licensed Electrician - Residential & Commercial",
+        "seo_score": 82, "grade": "B+",
+        "issues": [
+            "Description is 87 words - aim for 150+ for better indexing",
+            "No structured service areas listed",
+        ],
+        "suggestions": ["electrician near me", "panel upgrade Miami", "EV charger installation",
+                        "emergency electrician", "licensed master electrician"],
+        "impressions_30d": 1420, "clicks_30d": 87, "avg_position": 4.2, "organic_ctr": 6.1,
+        "top_keywords": [
+            {"keyword": "electrician Miami",         "impressions": 480, "clicks": 34, "position": 2.1},
+            {"keyword": "panel upgrade residential", "impressions": 310, "clicks": 21, "position": 3.8},
+            {"keyword": "EV charger installation",   "impressions": 280, "clicks": 18, "position": 5.2},
+            {"keyword": "smart home wiring",         "impressions": 190, "clicks": 9,  "position": 6.7},
+            {"keyword": "emergency electrician 24h", "impressions": 160, "clicks": 5,  "position": 9.1},
+        ],
+    },
+    {
+        "listing_id": 6,
+        "listing_title": "Professional Cleaning Services - Move In/Out",
+        "seo_score": 64, "grade": "C+",
+        "issues": [
+            "Title missing city keyword - add your city to title",
+            "No photos in listing (photos improve CTR by ~35%)",
+            "Price not specified - listings with prices rank higher",
+        ],
+        "suggestions": ["move out cleaning Chicago", "deep cleaning service", "Airbnb cleaning",
+                        "professional cleaners near me", "apartment cleaning service"],
+        "impressions_30d": 880, "clicks_30d": 42, "avg_position": 7.8, "organic_ctr": 4.8,
+        "top_keywords": [
+            {"keyword": "cleaning services Chicago", "impressions": 340, "clicks": 18, "position": 5.1},
+            {"keyword": "move out cleaning",         "impressions": 260, "clicks": 14, "position": 8.3},
+            {"keyword": "deep clean apartment",      "impressions": 180, "clicks": 7,  "position": 11.2},
+            {"keyword": "Airbnb cleaning service",   "impressions": 100, "clicks": 3,  "position": 14.5},
+        ],
+    },
+    {
+        "listing_id": 1,
+        "listing_title": "Spacious 3BR House for Sale - Austin Hills",
+        "seo_score": 91, "grade": "A",
+        "issues": ["Consider adding a virtual tour link to boost engagement"],
+        "suggestions": ["3 bedroom house Austin", "house for sale Austin Hills",
+                        "Austin real estate", "family home Austin"],
+        "impressions_30d": 2100, "clicks_30d": 198, "avg_position": 2.4, "organic_ctr": 9.4,
+        "top_keywords": [
+            {"keyword": "house for sale Austin",    "impressions": 820, "clicks": 89, "position": 1.8},
+            {"keyword": "3BR home Austin Hills",    "impressions": 610, "clicks": 64, "position": 2.1},
+            {"keyword": "Austin real estate",       "impressions": 450, "clicks": 31, "position": 4.6},
+            {"keyword": "family home Austin TX",    "impressions": 220, "clicks": 14, "position": 6.3},
+        ],
+    },
+]
+
+import random as _rnd3
+_rnd3.seed(99)
+MOCK_PPC_CAMPAIGNS = [
+    {
+        "id": "c1", "name": "Electrician - Miami Boost", "status": "active",
+        "start_date": datetime.now() - timedelta(days=14), "end_date": None,
+        "daily_budget": 15.00, "total_spend": 187.50,
+        "impressions": 8420, "clicks": 412, "conversions": 18,
+        "cpc": 0.46, "cpl": 10.42, "ctr": 4.9, "roas": 4.2,
+        "target_keywords": ["electrician Miami", "panel upgrade residential", "EV charger install"],
+        "target_cities": ["Miami", "Coral Gables", "Brickell"],
+        "listing_id": 3, "listing_title": "Licensed Electrician - Residential & Commercial",
+    },
+    {
+        "id": "c2", "name": "Cleaning - Chicago Leads", "status": "paused",
+        "start_date": datetime.now() - timedelta(days=30), "end_date": None,
+        "daily_budget": 10.00, "total_spend": 93.20,
+        "impressions": 3840, "clicks": 141, "conversions": 6,
+        "cpc": 0.66, "cpl": 15.53, "ctr": 3.7, "roas": 2.1,
+        "target_keywords": ["cleaning services Chicago", "move out cleaning", "deep clean"],
+        "target_cities": ["Chicago", "Evanston", "Oak Park"],
+        "listing_id": 6, "listing_title": "Professional Cleaning Services - Move In/Out",
+    },
+    {
+        "id": "c3", "name": "Austin House - Prime Placement", "status": "active",
+        "start_date": datetime.now() - timedelta(days=7),
+        "end_date": datetime.now() + timedelta(days=23),
+        "daily_budget": 25.00, "total_spend": 148.75,
+        "impressions": 5910, "clicks": 387, "conversions": 14,
+        "cpc": 0.38, "cpl": 10.62, "ctr": 6.5, "roas": 5.8,
+        "target_keywords": ["house for sale Austin", "Austin Hills real estate", "3BR Austin"],
+        "target_cities": ["Austin", "Round Rock", "Cedar Park"],
+        "listing_id": 1, "listing_title": "Spacious 3BR House for Sale - Austin Hills",
+    },
+]
+
+PERFORMANCE_ANALYTICS = {
+    "funnel": {
+        "impressions": 18310, "clicks": 1240, "views": 880,
+        "leads": 31, "conversions": 8,
+    },
+    "lead_quality": {"hot": 3, "warm": 3, "cold": 2},
+    "lead_sources_30d": {
+        "Organic Search": 12, "Featured Listing": 8,
+        "Prime Boost": 7, "PPC Campaign": 4,
+    },
+    "weekly_impressions": [_rnd3.randint(1800, 3200) for _ in range(8)],
+    "weekly_clicks":      [_rnd3.randint(120, 260)   for _ in range(8)],
+    "geographic_leads": [
+        {"city": "Houston", "leads": 9,  "conv_rate": 33.3},
+        {"city": "Chicago", "leads": 7,  "conv_rate": 28.6},
+        {"city": "Austin",  "leads": 8,  "conv_rate": 37.5},
+        {"city": "Miami",   "leads": 5,  "conv_rate": 20.0},
+        {"city": "Phoenix", "leads": 2,  "conv_rate": 50.0},
+    ],
+    "roi": {
+        "total_ad_spend":      429.45,
+        "estimated_revenue": 12400.00,
+        "roi_pct":            2789.0,
+        "cost_per_acquisition":  53.68,
+    },
+    "response_rate_pct": 87.5,
+    "avg_lead_value":    744.0,
+    "verified_lead_pct": 62.5,
 }

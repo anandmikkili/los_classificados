@@ -8,6 +8,10 @@ from los_classificados.layouts.browse import browse_layout
 from los_classificados.layouts.post_ad import post_ad_layout
 from los_classificados.layouts.prime import prime_layout
 from los_classificados.layouts.leads import leads_layout
+from los_classificados.layouts.my_listings import my_listings_layout
+from los_classificados.layouts.providers import providers_layout
+from los_classificados.layouts.dashboard import dashboard_layout
+from los_classificados.layouts.business_profile import business_profile_layout
 
 
 @app.callback(
@@ -38,6 +42,18 @@ def render_page(pathname, search):
         return prime_layout()
     if pathname == "/leads":
         return leads_layout()
+    if pathname == "/my-listings":
+        return my_listings_layout()
+    if pathname == "/providers":
+        return providers_layout(
+            search_query=params.get("q", ""),
+            subcategory=params.get("subcategory", ""),
+            city=params.get("city", ""),
+        )
+    if pathname == "/dashboard":
+        return dashboard_layout(active_tab=params.get("tab", "overview"))
+    if pathname == "/business":
+        return business_profile_layout(business_id=params.get("id", "b1"))
     # 404
     return html.Div(
         className="d-flex flex-column align-items-center justify-content-center",

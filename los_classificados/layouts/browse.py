@@ -1,16 +1,29 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
-from los_clasificados.utils.mock_data import CATEGORIES, MOCK_LISTINGS, CITIES
+from los_classificados.utils.mock_data import CATEGORIES, MOCK_LISTINGS, CITIES, time_ago
 
 
 def _listing_row(lst):
     """Horizontal listing row card for browse view."""
-    has_wa = bool(lst.get("contact_whatsapp"))
-    has_ph = bool(lst.get("contact_phone"))
+    has_wa  = bool(lst.get("contact_whatsapp"))
+    has_ph  = bool(lst.get("contact_phone"))
+    is_feat = bool(lst.get("is_featured"))
+    freshness = time_ago(lst["created_at"])
+
+    border_style = {"overflow": "hidden", "border": "1.5px solid rgba(255,107,53,0.35)"} if is_feat else {"overflow": "hidden"}
+
     return html.Div(
         className="lc-card d-flex mb-3",
-        style={"overflow": "hidden"},
+        style=border_style,
         children=[
+            # featured side stripe
+            html.Div(
+                style={
+                    "width": "4px", "minWidth": "4px",
+                    "background": "linear-gradient(180deg, #ff6b35, #ff9a6c)",
+                    "flexShrink": "0",
+                },
+            ) if is_feat else None,
             html.Img(
                 src=lst["image"],
                 style={"width": "180px", "minWidth": "180px", "objectFit": "cover"},
@@ -19,15 +32,33 @@ def _listing_row(lst):
             html.Div(
                 className="p-3 d-flex flex-column flex-grow-1",
                 children=[
-                    # top row: badges + time
+                    # top row: badges + city + freshness
                     html.Div(className="d-flex justify-content-between align-items-start mb-1", children=[
                         html.Div([
+                            html.Span(
+                                [html.I(className="fas fa-bolt me-1"), "Featured"],
+                                className="me-1",
+                                style={
+                                    "background": "rgba(255,107,53,0.15)", "color": "#ff6b35",
+                                    "border": "1px solid rgba(255,107,53,0.4)",
+                                    "borderRadius": "100px", "padding": "0.1rem 0.45rem",
+                                    "fontSize": "0.68rem", "fontWeight": "700",
+                                },
+                            ) if is_feat else None,
                             html.Span("★ Prime", className="badge-prime me-1") if lst["is_prime"] else None,
                             html.Span([html.I(className="fas fa-check-circle me-1"), "Verified"],
                                       className="badge-verified me-1") if lst["is_verified"] else None,
                             html.Span(lst["subcategory"], className="badge-cat"),
                         ]),
-                        html.Small(lst["city"], className="text-muted-lc"),
+                        html.Div(className="d-flex align-items-center gap-2", children=[
+                            html.Small(lst["city"], className="text-muted-lc"),
+                            html.Small(
+                                [html.I(className="fas fa-clock me-1"), freshness],
+                                className="text-muted-lc",
+                                style={"fontSize": "0.72rem"},
+                                title=str(lst["created_at"]),
+                            ),
+                        ]),
                     ]),
                     html.Div(lst["title"], className="listing-title mb-1"),
                     html.P(
@@ -71,11 +102,12 @@ def browse_layout(search_query="", selected_category="", city=""):
         {"label": c, "value": c} for c in CITIES
     ]
     sort_options = [
-        {"label": "Most Recent",     "value": "recent"},
-        {"label": "Lowest Price",    "value": "price_asc"},
-        {"label": "Highest Price",   "value": "price_desc"},
-        {"label": "Most Viewed",     "value": "views"},
-        {"label": "Prime First",     "value": "prime"},
+        {"label": "⚡ Featured First", "value": "featured"},
+        {"label": "Most Recent",       "value": "recent"},
+        {"label": "Lowest Price",      "value": "price_asc"},
+        {"label": "Highest Price",     "value": "price_desc"},
+        {"label": "Most Viewed",       "value": "views"},
+        {"label": "★ Prime First",     "value": "prime"},
     ]
 
     active_city_banner = html.Div(
@@ -185,6 +217,33 @@ def browse_layout(search_query="", selected_category="", city=""):
                             input_style={"accentColor": "var(--accent-teal)"},
                             label_style={"color": "var(--text-secondary)", "fontSize": "0.875rem"},
                         ),
+                        # Subcategory drill-down (reactive: shown when 1 category is checked)
+                        html.Div(
+                            id="subcategory-drill-down-section",
+                            style={"display": "none"},
+                            children=[
+                                html.Div(
+                                    className="d-flex align-items-center gap-1 mb-1",
+                                    children=[
+                                        html.Div("Subcategory", className="filter-title mb-0"),
+                                        html.Span(
+                                            html.I(className="fas fa-chevron-right"),
+                                            style={"color": "var(--accent-teal)", "fontSize": "0.65rem"},
+                                        ),
+                                    ],
+                                ),
+                                dbc.Checklist(
+                                    id="filter-subcategories",
+                                    options=[],
+                                    value=[],
+                                    className="mb-3",
+                                    input_style={"accentColor": "var(--accent-teal)"},
+                                    label_style={"color": "var(--text-secondary)", "fontSize": "0.82rem"},
+                                ),
+                                html.Hr(className="divider"),
+                            ],
+                        ),
+
                         html.Hr(className="divider"),
 
                         # Price range
@@ -251,6 +310,33 @@ def browse_layout(search_query="", selected_category="", city=""):
                                 dbc.Checklist(
                                     id="filter-neighborhoods",
                                     options=[],
+                                    value=[],
+                                    className="mb-3",
+                                    input_style={"accentColor": "var(--accent-teal)"},
+                                    label_style={"color": "var(--text-secondary)", "fontSize": "0.875rem"},
+                                ),
+                                html.Hr(className="divider"),
+                            ],
+                        ),
+
+                        # Nearby cities toggle (shown when selected city has adjacent markets)
+                        html.Div(
+                            id="nearby-cities-section",
+                            style={"display": "none"},
+                            children=[
+                                html.Div(
+                                    className="d-flex align-items-center gap-1 mb-1",
+                                    children=[
+                                        html.Div("Nearby Markets", className="filter-title mb-0"),
+                                        html.Span(
+                                            html.I(className="fas fa-expand-arrows-alt"),
+                                            style={"color": "var(--accent-teal)", "fontSize": "0.7rem"},
+                                        ),
+                                    ],
+                                ),
+                                dbc.Checklist(
+                                    id="filter-nearby-cities",
+                                    options=[{"label": "Include nearby cities", "value": "nearby"}],
                                     value=[],
                                     className="mb-3",
                                     input_style={"accentColor": "var(--accent-teal)"},

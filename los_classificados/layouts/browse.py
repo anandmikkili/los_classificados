@@ -72,7 +72,7 @@ def _listing_row(lst):
                             html.I(className="fas fa-map-marker-alt me-1"),
                             lst["neighborhood"],
                         ], className="text-muted-lc", style={"fontSize": "0.8rem"}),
-                        html.Div(className="ms-auto d-flex gap-2", children=[
+                        html.Div(className="ms-auto d-flex gap-2 align-items-center", children=[
                             html.A(
                                 [html.I(className="fab fa-whatsapp me-1"), "WhatsApp"],
                                 href=f"https://wa.me/{lst['contact_whatsapp'].replace('+','')}" if has_wa else "#",
@@ -86,6 +86,14 @@ def _listing_row(lst):
                                 className="btn btn-sm btn-call px-3",
                                 style={"fontSize": "0.78rem"},
                             ) if has_ph else None,
+                            html.Button(
+                                html.I(className="fas fa-flag"),
+                                id={"type": "flag-btn", "index": lst["id"]},
+                                n_clicks=0,
+                                title="Report this listing",
+                                className="btn btn-sm btn-outline-secondary px-2",
+                                style={"fontSize": "0.72rem", "opacity": "0.45", "lineHeight": "1"},
+                            ),
                         ]),
                     ]),
                 ],

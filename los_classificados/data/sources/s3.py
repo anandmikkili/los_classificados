@@ -48,6 +48,7 @@ class S3DataSource(DataSource):
         secret_key: str | None = None,
         endpoint_url: str | None = None,      # useful for LocalStack / MinIO
     ) -> None:
+        super().__init__()
         self._bucket = bucket or Config.S3_BUCKET
         self._region = region or Config.AWS_REGION
         self._access_key = access_key or Config.AWS_ACCESS_KEY_ID

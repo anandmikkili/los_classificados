@@ -10,17 +10,14 @@ Run with:
 from dash import html, dcc
 
 # ── 1. Create Dash app instance (must come first) ────────────────────────────
-from los_classificados.server import app as app  # re-exported so Dash finds it
-
-# Expose Flask server for production WSGI: `gunicorn main:server`
-server = app.server
+from los_classificados.server import app, server  # noqa: F401  server re-exported for gunicorn
 
 # ── 2. Import layouts ─────────────────────────────────────────────────────────
 from los_classificados.layouts.navbar import navbar_layout
+from los_classificados.layouts.flag_modal import flag_modal_layout
 
 # ── 3. Register all callbacks (side-effect imports – decorators run on import) ─
-import los_classificados.callbacks as _cb  # registers all @app.callback decorators
-_ = _cb  # mark as used
+import los_classificados.callbacks  # noqa: F401 – side-effect: registers all @app.callback decorators
 
 # ── 4. Database init (graceful – falls back to demo mode if MySQL unavailable) ─
 from los_classificados.db.connection import init_db, DB_AVAILABLE
@@ -44,6 +41,9 @@ app.layout = html.Div(
 
         # Page content – swapped out by the routing callback
         html.Div(id="page-content"),
+
+        # Global safety components (always in DOM, works on every page)
+        flag_modal_layout(),
     ],
 )
 

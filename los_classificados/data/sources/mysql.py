@@ -43,6 +43,7 @@ class MySQLDataSource(DataSource):
         pool_recycle: int = 3600,
         echo: bool = False,
     ) -> None:
+        super().__init__()
         self._url = url or Config.DATABASE_URL
         self._pool_size = pool_size
         self._max_overflow = max_overflow

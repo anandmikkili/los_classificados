@@ -29,17 +29,6 @@ except Exception:
     DB_AVAILABLE = False
 
 
-def get_db():
-    """Dependency-style DB session context manager."""
-    if not DB_AVAILABLE or SessionLocal is None:
-        raise RuntimeError("Database not configured.")
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 def init_db():
     """Create all tables if they don't exist."""
     if engine is not None:

@@ -3,44 +3,8 @@ from dash import Input, Output, State, html, callback_context
 from dash.exceptions import PreventUpdate
 from los_classificados.server import app
 from los_classificados.utils.mock_data import (
-    MOCK_LISTINGS, CATEGORIES, NEIGHBORHOODS_BY_CITY, NEARBY_CITIES, time_ago,
+    MOCK_LISTINGS, CATEGORIES, NEIGHBORHOODS_BY_CITY, NEARBY_CITIES, SUBCATEGORIES, time_ago,
 )
-
-# Mirror of SUBCATEGORIES (single source in post_ad_callbacks; duplicated here
-# to avoid import cycles and keep callbacks self-contained).
-_SUBCATEGORIES = {
-    "real_estate": ["House for Sale", "Apartment for Sale", "Condo for Sale", "Townhouse",
-                    "Land/Lot", "Multi-Family", "Commercial Property", "Industrial", "Other"],
-    "rentals":     ["Apartment Rental", "House Rental", "Room for Rent", "Studio",
-                    "Commercial Rental", "Office Space", "Vacation Rental", "Short-Term / Airbnb", "Other"],
-    "services":    ["Electrician", "Plumber", "Cleaning", "Landscaping", "Moving", "Handyman",
-                    "Painting", "HVAC", "Pest Control", "Roofing", "Tutoring", "Childcare",
-                    "IT Support", "Photography", "Other"],
-    "vehicles":    ["Sedan", "SUV/Truck", "Pickup Truck", "Van/Minivan", "Motorcycle",
-                    "Boat", "RV/Camper", "Electric Vehicle", "Classic Car",
-                    "Commercial Vehicle", "Parts & Accessories", "Other"],
-    "electronics": ["Phones", "Laptops", "Tablets", "TVs", "Gaming Consoles",
-                    "Audio/Speakers", "Cameras", "Smart Home", "Accessories", "Other"],
-    "furniture":   ["Sofas & Sectionals", "Beds & Bedframes", "Mattresses", "Dining Sets",
-                    "Office Furniture", "Kids Furniture", "Outdoor/Patio", "Storage & Shelving", "Other"],
-    "jobs":        ["Technology", "Healthcare", "Construction & Trades",
-                    "Retail & Customer Service", "Finance & Accounting", "Education",
-                    "Transportation & Delivery", "Marketing & Design",
-                    "Remote / Work from Home", "Part-Time / Gig", "Other"],
-    "pets":        ["Dogs", "Cats", "Birds", "Fish & Aquarium", "Reptiles",
-                    "Small Animals", "Pet Accessories", "Pet Services", "Adoption", "Breeding", "Other"],
-    "community":   ["Events & Activities", "Garage Sales", "Lost & Found", "Volunteering",
-                    "Classes & Workshops", "Rideshare", "Free Stuff",
-                    "Musicians & Bands", "Sports & Fitness Groups", "Other"],
-    "beauty":      ["Hair Salon", "Nail Salon", "Spa & Massage", "Personal Training",
-                    "Yoga & Pilates", "Barber", "Makeup Artist", "Skincare",
-                    "Tattoo & Piercing", "Other"],
-    "food":        ["Catering", "Home-cooked Meals", "Baked Goods", "Food Trucks",
-                    "Private Chef", "Meal Prep", "Specialty Foods", "Drinks & Beverages", "Other"],
-    "other":       ["Collectibles", "Antiques", "Sports & Outdoors", "Baby & Kids",
-                    "Clothing & Accessories", "Books & Media", "Musical Instruments",
-                    "Art & Crafts", "Tickets & Vouchers", "Other"],
-}
 
 
 def _listing_row(lst):
@@ -112,7 +76,7 @@ def _listing_row(lst):
                             [html.I(className="fas fa-map-marker-alt me-1"), lst["neighborhood"]],
                             className="text-muted-lc", style={"fontSize": "0.8rem"},
                         ),
-                        html.Div(className="ms-auto d-flex gap-2", children=[
+                        html.Div(className="ms-auto d-flex gap-2 align-items-center", children=[
                             html.A(
                                 [html.I(className="fab fa-whatsapp me-1"), "WhatsApp"],
                                 href=f"https://wa.me/{lst['contact_whatsapp'].replace('+','')}" if has_wa else "#",
@@ -126,6 +90,14 @@ def _listing_row(lst):
                                 className="btn btn-sm btn-call px-3",
                                 style={"fontSize": "0.78rem"},
                             ) if has_ph else None,
+                            html.Button(
+                                html.I(className="fas fa-flag"),
+                                id={"type": "flag-btn", "index": lst["id"]},
+                                n_clicks=0,
+                                title="Report this listing",
+                                className="btn btn-sm btn-outline-secondary px-2",
+                                style={"fontSize": "0.72rem", "opacity": "0.45", "lineHeight": "1"},
+                            ),
                         ]),
                     ]),
                 ],
@@ -210,7 +182,7 @@ def update_city_banner(city, nearby_opt):
 def update_subcategory_filter(selected_cats):
     if selected_cats and len(selected_cats) == 1:
         cat_id = selected_cats[0]
-        subs = _SUBCATEGORIES.get(cat_id, [])
+        subs = SUBCATEGORIES.get(cat_id, [])
         opts = [{"label": s, "value": s} for s in subs]
         return {}, opts, []
     return {"display": "none"}, [], []

@@ -1,6 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 from los_classificados.utils.mock_data import CATEGORIES, CITIES, PLAN_FEATURES
+from los_classificados.utils.safety import CONTENT_GUIDELINES
 
 
 def _section_title(icon, text):
@@ -220,7 +221,26 @@ def post_ad_layout():
                                     id="post-ad-email",
                                     placeholder="your@email.com",
                                     type="email",
-                                    className="form-control mb-3",
+                                    className="form-control mb-2",
+                                ),
+                                dbc.Checklist(
+                                    id="post-ad-email-mask",
+                                    options=[{
+                                        "label": "Use platform relay — hide my email from public",
+                                        "value": "mask",
+                                    }],
+                                    value=[],
+                                    input_style={"accentColor": "var(--accent-teal)"},
+                                    label_style={
+                                        "color": "var(--text-secondary)",
+                                        "fontSize": "0.82rem",
+                                    },
+                                ),
+                                # Live masked-address preview
+                                html.Div(
+                                    id="post-ad-email-masked-preview",
+                                    style={"display": "none"},
+                                    className="mb-3",
                                 ),
                             ], md=6),
                             dbc.Col([
@@ -343,6 +363,9 @@ def post_ad_layout():
                                 ]),
                             ],
                         ),
+
+                        # Inline warning shown when images exist but consent is missing
+                        html.Div(id="image-consent-warning"),
 
                         # Hidden store holding validated image data
                         dcc.Store(id="image-store", data=[]),
@@ -583,6 +606,97 @@ def post_ad_layout():
                             ]),
                         ],
                     ),
+
+                    # ── Content moderation alert (real-time) ──────────────
+                    html.Div(id="content-moderation-alert", className="mb-3"),
+
+                    # ── Content guidelines (collapsible reference) ─────────
+                    html.Div(className="lc-card p-3 mb-4", children=[
+                        html.Div(
+                            id="content-guidelines-toggle",
+                            n_clicks=0,
+                            className="d-flex align-items-center justify-content-between",
+                            style={"cursor": "pointer"},
+                            children=[
+                                html.Div([
+                                    html.I(className="fas fa-shield-alt me-2 text-teal"),
+                                    html.Span(
+                                        "Content Guidelines & Posting Policy",
+                                        style={"fontWeight": "700", "fontSize": "0.9rem"},
+                                    ),
+                                ]),
+                                html.I(
+                                    className="fas fa-chevron-down",
+                                    id="guidelines-chevron",
+                                    style={"color": "var(--text-muted)", "fontSize": "0.8rem"},
+                                ),
+                            ],
+                        ),
+                        dbc.Collapse(
+                            id="content-guidelines-collapse",
+                            is_open=False,
+                            children=[
+                                html.Hr(className="divider my-2"),
+                                dbc.Row([
+                                    dbc.Col([
+                                        html.Div(
+                                            [
+                                                html.I(className="fas fa-check-circle me-1 text-teal"),
+                                                html.Span(
+                                                    "What's allowed",
+                                                    style={"fontWeight": "700", "fontSize": "0.82rem"},
+                                                ),
+                                            ],
+                                            className="mb-2",
+                                        ),
+                                        html.Ul(
+                                            [
+                                                html.Li(
+                                                    item,
+                                                    style={
+                                                        "fontSize": "0.78rem",
+                                                        "color": "var(--text-secondary)",
+                                                        "marginBottom": "0.25rem",
+                                                    },
+                                                )
+                                                for item in CONTENT_GUIDELINES["allowed"]
+                                            ],
+                                            style={"paddingLeft": "1.2rem"},
+                                        ),
+                                    ], md=6),
+                                    dbc.Col([
+                                        html.Div(
+                                            [
+                                                html.I(
+                                                    className="fas fa-times-circle me-1",
+                                                    style={"color": "#ef4444"},
+                                                ),
+                                                html.Span(
+                                                    "What's NOT allowed",
+                                                    style={"fontWeight": "700", "fontSize": "0.82rem"},
+                                                ),
+                                            ],
+                                            className="mb-2",
+                                        ),
+                                        html.Ul(
+                                            [
+                                                html.Li(
+                                                    item,
+                                                    style={
+                                                        "fontSize": "0.78rem",
+                                                        "color": "var(--text-secondary)",
+                                                        "marginBottom": "0.25rem",
+                                                    },
+                                                )
+                                                for item in CONTENT_GUIDELINES["prohibited"]
+                                            ],
+                                            style={"paddingLeft": "1.2rem"},
+                                        ),
+                                    ], md=6),
+                                ]),
+                            ],
+                        ),
+                    ]),
 
                     # ── Submit ────────────────────────────────────────────
                     dbc.Row([

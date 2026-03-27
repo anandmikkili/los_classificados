@@ -14,7 +14,8 @@ class DataSource(ABC):
     manager protocol is provided here for free.
     """
 
-    _connected: bool = False
+    def __init__(self) -> None:
+        self._connected: bool = False
 
     # ── lifecycle ────────────────────────────────────────────────────────────
 

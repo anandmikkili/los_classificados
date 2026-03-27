@@ -38,6 +38,11 @@ def navbar_layout():
                     dcc.Link("Services", href="/providers", className="nav-link-lc"),
                     dcc.Link("Prime",   href="/prime",   className="nav-link-lc"),
                     dcc.Link(
+                        [html.I(className="fas fa-bolt me-1"), "Performance"],
+                        href="/performance",
+                        className="nav-link-lc",
+                    ),
+                    dcc.Link(
                         [html.I(className="fas fa-chart-line me-1"), "My Leads"],
                         href="/leads",
                         className="nav-link-lc",

@@ -7,67 +7,8 @@ from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 from los_classificados.server import app
-from los_classificados.utils.mock_data import CATEGORIES, NEIGHBORHOODS_BY_CITY
-
-# ── Subcategories ────────────────────────────────────────────────────────────
-
-SUBCATEGORIES = {
-    "real_estate": [
-        "House for Sale", "Apartment for Sale", "Condo for Sale", "Townhouse",
-        "Land/Lot", "Multi-Family", "Commercial Property", "Industrial", "Other",
-    ],
-    "rentals": [
-        "Apartment Rental", "House Rental", "Room for Rent", "Studio",
-        "Commercial Rental", "Office Space", "Vacation Rental", "Short-Term / Airbnb", "Other",
-    ],
-    "services": [
-        "Electrician", "Plumber", "Cleaning", "Landscaping", "Moving", "Handyman",
-        "Painting", "HVAC", "Pest Control", "Roofing", "Tutoring", "Childcare",
-        "IT Support", "Photography", "Other",
-    ],
-    "vehicles": [
-        "Sedan", "SUV/Truck", "Pickup Truck", "Van/Minivan", "Motorcycle",
-        "Boat", "RV/Camper", "Electric Vehicle", "Classic Car",
-        "Commercial Vehicle", "Parts & Accessories", "Other",
-    ],
-    "electronics": [
-        "Phones", "Laptops", "Tablets", "TVs", "Gaming Consoles",
-        "Audio/Speakers", "Cameras", "Smart Home", "Accessories", "Other",
-    ],
-    "furniture": [
-        "Sofas & Sectionals", "Beds & Bedframes", "Mattresses", "Dining Sets",
-        "Office Furniture", "Kids Furniture", "Outdoor/Patio", "Storage & Shelving", "Other",
-    ],
-    "jobs": [
-        "Technology", "Healthcare", "Construction & Trades",
-        "Retail & Customer Service", "Finance & Accounting", "Education",
-        "Transportation & Delivery", "Marketing & Design",
-        "Remote / Work from Home", "Part-Time / Gig", "Other",
-    ],
-    "pets": [
-        "Dogs", "Cats", "Birds", "Fish & Aquarium", "Reptiles",
-        "Small Animals", "Pet Accessories", "Pet Services", "Adoption", "Breeding", "Other",
-    ],
-    "community": [
-        "Events & Activities", "Garage Sales", "Lost & Found", "Volunteering",
-        "Classes & Workshops", "Rideshare", "Free Stuff",
-        "Musicians & Bands", "Sports & Fitness Groups", "Other",
-    ],
-    "beauty": [
-        "Hair Salon", "Nail Salon", "Spa & Massage", "Personal Training",
-        "Yoga & Pilates", "Barber", "Makeup Artist", "Skincare",
-        "Tattoo & Piercing", "Other",
-    ],
-    "food": [
-        "Catering", "Home-cooked Meals", "Baked Goods", "Food Trucks",
-        "Private Chef", "Meal Prep", "Specialty Foods", "Drinks & Beverages", "Other",
-    ],
-    "other": [
-        "Collectibles", "Antiques", "Sports & Outdoors", "Baby & Kids",
-        "Clothing & Accessories", "Books & Media", "Musical Instruments",
-        "Art & Crafts", "Tickets & Vouchers", "Other",
-    ],
-}
+from los_classificados.utils.mock_data import CATEGORIES, NEIGHBORHOODS_BY_CITY, SUBCATEGORIES
+from los_classificados.utils.safety import check_content_violations
 
 # ── Image validation constants ────────────────────────────────────────────────
 
@@ -480,6 +421,10 @@ def submit_ad(n_clicks, title, description, city, contact_name, category, plan,
             "Please confirm you own or have the rights to use all uploaded images "
             "before publishing your ad."
         )
+    # Content moderation – server-side gate (mirrors real-time client check)
+    violations = check_content_violations(title, description)
+    if violations:
+        errors.append(f"Content policy violation: {violations[0]}")
 
     if errors:
         return dbc.Alert(

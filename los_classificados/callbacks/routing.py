@@ -12,6 +12,7 @@ from los_classificados.layouts.my_listings import my_listings_layout
 from los_classificados.layouts.providers import providers_layout
 from los_classificados.layouts.dashboard import dashboard_layout
 from los_classificados.layouts.business_profile import business_profile_layout
+from los_classificados.layouts.performance import performance_layout
 
 
 @app.callback(
@@ -52,6 +53,8 @@ def render_page(pathname, search):
         )
     if pathname == "/dashboard":
         return dashboard_layout(active_tab=params.get("tab", "overview"))
+    if pathname == "/performance":
+        return performance_layout()
     if pathname == "/business":
         return business_profile_layout(business_id=params.get("id", "b1"))
     # 404

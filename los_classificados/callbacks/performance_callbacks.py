@@ -4,8 +4,8 @@ from dash import Input, Output, State, ALL, html
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-from los_clasificados.server import app
-from los_clasificados.utils.mock_data import (
+from los_classificados.server import app
+from los_classificados.utils.mock_data import (
     MOCK_VERIFIED_LEADS, LEAD_QUALITY_LABELS, LEAD_STATUS_LABELS,
     RESPONSE_PACKAGES, MOCK_PPC_CAMPAIGNS,
 )
@@ -68,7 +68,7 @@ def filter_perf_leads(quality_filter, source_filter):
 
     leads = sorted(leads, key=lambda x: x["quality_score"], reverse=True)
 
-    from los_clasificados.layouts.performance import _lead_row
+    from los_classificados.layouts.performance import _lead_row
     count = f"{len(leads)} lead{'s' if len(leads) != 1 else ''}"
 
     if not leads:

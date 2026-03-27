@@ -597,6 +597,66 @@ MOCK_USER_LISTINGS = [
 ]
 
 
+# ── Listing subcategories (single source of truth) ───────────────────────────
+
+SUBCATEGORIES = {
+    "real_estate": [
+        "House for Sale", "Apartment for Sale", "Condo for Sale", "Townhouse",
+        "Land/Lot", "Multi-Family", "Commercial Property", "Industrial", "Other",
+    ],
+    "rentals": [
+        "Apartment Rental", "House Rental", "Room for Rent", "Studio",
+        "Commercial Rental", "Office Space", "Vacation Rental", "Short-Term / Airbnb", "Other",
+    ],
+    "services": [
+        "Electrician", "Plumber", "Cleaning", "Landscaping", "Moving", "Handyman",
+        "Painting", "HVAC", "Pest Control", "Roofing", "Tutoring", "Childcare",
+        "IT Support", "Photography", "Other",
+    ],
+    "vehicles": [
+        "Sedan", "SUV/Truck", "Pickup Truck", "Van/Minivan", "Motorcycle",
+        "Boat", "RV/Camper", "Electric Vehicle", "Classic Car",
+        "Commercial Vehicle", "Parts & Accessories", "Other",
+    ],
+    "electronics": [
+        "Phones", "Laptops", "Tablets", "TVs", "Gaming Consoles",
+        "Audio/Speakers", "Cameras", "Smart Home", "Accessories", "Other",
+    ],
+    "furniture": [
+        "Sofas & Sectionals", "Beds & Bedframes", "Mattresses", "Dining Sets",
+        "Office Furniture", "Kids Furniture", "Outdoor/Patio", "Storage & Shelving", "Other",
+    ],
+    "jobs": [
+        "Technology", "Healthcare", "Construction & Trades",
+        "Retail & Customer Service", "Finance & Accounting", "Education",
+        "Transportation & Delivery", "Marketing & Design",
+        "Remote / Work from Home", "Part-Time / Gig", "Other",
+    ],
+    "pets": [
+        "Dogs", "Cats", "Birds", "Fish & Aquarium", "Reptiles",
+        "Small Animals", "Pet Accessories", "Pet Services", "Adoption", "Breeding", "Other",
+    ],
+    "community": [
+        "Events & Activities", "Garage Sales", "Lost & Found", "Volunteering",
+        "Classes & Workshops", "Rideshare", "Free Stuff",
+        "Musicians & Bands", "Sports & Fitness Groups", "Other",
+    ],
+    "beauty": [
+        "Hair Salon", "Nail Salon", "Spa & Massage", "Personal Training",
+        "Yoga & Pilates", "Barber", "Makeup Artist", "Skincare",
+        "Tattoo & Piercing", "Other",
+    ],
+    "food": [
+        "Catering", "Home-cooked Meals", "Baked Goods", "Food Trucks",
+        "Private Chef", "Meal Prep", "Specialty Foods", "Drinks & Beverages", "Other",
+    ],
+    "other": [
+        "Collectibles", "Antiques", "Sports & Outdoors", "Baby & Kids",
+        "Clothing & Accessories", "Books & Media", "Musical Instruments",
+        "Art & Crafts", "Tickets & Vouchers", "Other",
+    ],
+}
+
 # ── Service provider directory ────────────────────────────────────────────────
 
 PROVIDER_SUBCATEGORIES = {
